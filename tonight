@@ -1,0 +1,184 @@
+#!/usr/bin/env python3
+
+import json
+import untangle
+import requests
+import sys
+
+from datetime import datetime, timedelta
+
+
+def add_event(events, now, template, day, begin, end):
+    if begin == "":
+        begin = '00:00'
+    begin = day + ' ' + begin
+    if end == "":
+        end = '23:59'
+    end = day + ' ' + end
+    if (datetime.strptime(begin, '%Y-%m-%d %H:%M') < now or
+        datetime.strptime(end, '%Y-%m-%d %H:%M') < now):
+        return
+    template['begin'] = begin
+    template['end'] = end
+    events.append(template)
+
+
+def parse_events_nuernberg(events, now, xml):
+    def collect_days(begin, end, weekday):
+        # map german weekday abbreviations to datetime.weekday()
+        if weekday == 'mo':
+            weekday = 0
+        elif weekday == 'di':
+            weekday = 1
+        elif weekday == 'mi':
+            weekday = 2
+        elif weekday == 'do':
+            weekday = 3
+        elif weekday == 'fr':
+            weekday = 4
+        elif weekday == 'sa':
+            weekday = 5
+        elif weekday == 'so':
+            weekday = 6
+        else:
+            return []
+        dt = datetime.strptime(begin, '%Y-%m-%d')
+        until = datetime.strptime(end, '%Y-%m-%d')
+        days = []
+        while dt <= until:
+            if dt.weekday() == weekday:
+                days.append(dt.strftime('%Y-%m-%d'))
+            dt += timedelta(days=1)
+        return days
+
+    #       .-"-.
+    #     _/_-.-_\_
+    #    / __} {__ \
+    #   / //  "  \\ \
+    #  / / \'---'/ \ \
+    #  \ \_/`"""`\_/ /
+    #   \           /
+    # see https://meineveranstaltungen.nuernberg.de/Export_Schnittstelle.pdf
+    for event in xml.ERGEBNIS.VERANSTALTUNG:
+        elements_in_event = dir(event)
+        template = {
+            'name': event.TITEL.cdata,
+            'detail': event.UNTERTITEL.cdata,
+            'place': event.ORT.cdata,
+            'image_url': event.BILD.cdata,
+            'url': event.DETAILLINK.cdata if 'DETAILLINK' in elements_in_event else "",
+        }
+        # add an event for all opening hours
+        hours = event.OEFFNUNGSZEITEN
+        elements_in_hours = dir(hours)
+        t = hours['TYP']
+        if t == '1':
+            d = hours.DATUM
+            add_event(
+                events,
+                now,
+                template,
+                d.cdata,
+                d['BEGINN'],
+                d['ENDE'],
+            )
+        elif t == '2' or 'DATUM' in elements_in_hours:
+            for d in hours.DATUM:
+                add_event(
+                    events,
+                    now,
+                    template,
+                    d.cdata,
+                    d['BEGINN'],
+                    d['ENDE'],
+                )
+        elif t == '3' or 'OFFENETAGE' in elements_in_hours:
+            days = {}
+            # add all weekdays between DATUM1 and DATUM2
+            begin = hours.DATUM1.cdata
+            end = hours.DATUM2.cdata
+            if 'OFFENETAGE' in elements_in_hours:
+                for d in hours.OFFENETAGE.OFFENERTAG:
+                    for day in collect_days(begin, end, d.cdata):
+                        days[day] = {
+                            'begin': d['BEGINN'],
+                            'end': d['ENDE'],
+                        }
+            # remove exceptions
+            if 'AUSNAHMEN' in elements_in_hours:
+                for day in filter(None, hours.AUSNAHMEN.cdata.split(';')):
+                    days.pop(day, None)
+            # overwrite with deviating days
+            if ('ABWEICHENDETAGE' in elements_in_hours and
+                'ABWEICHENDERTAG' in dir(hours.ABWEICHENDETAGE)):
+                for d in hours.ABWEICHENDETAGE.ABWEICHENDERTAG:
+                    days[d.cdata] = {
+                        'begin': d['BEGINN'],
+                        'end': d['ENDE'],
+                    }
+            for day, times in days.items():
+                add_event(
+                    events,
+                    now,
+                    template,
+                    day,
+                    times['begin'],
+                    times['end'],
+                )
+
+
+def parse_cinecitta(events, now, shows):
+    for item in shows['daten']['items']:
+        for theater in item['theater']:
+            for screen in theater['leinwaende']:
+                place = '%s %s' % (
+                    screen['theater_name'],
+                    screen['leinwand_name'],
+                )
+                for showing in screen['vorstellungen']:
+                    template = {
+                        'name': item['film_titel'],
+                        'detail': item['film_beschreibung'],
+                        'place': place,
+                        'image_url': item['film_cover_src'],
+                        'url': 'https://www.cinecitta.de/' +
+                            item['filminfo_href'],
+                    }
+                    dt = datetime.fromisoformat(showing['datum_uhrzeit_iso'])
+                    add_event(
+                        events,
+                        now,
+                        template,
+                        dt.strftime('%Y-%m-%d'),
+                        dt.strftime('%H:%M'),
+                        (dt + timedelta(hours=2)).strftime('%H:%M'),
+                    )
+
+
+def fetch_events(now):
+    events = []
+    parse_events_nuernberg(events, now, untangle.parse(
+        'http://meine-veranstaltungen.net/export.php5'
+    ))
+    parse_cinecitta(events, now, requests.get(
+        'https://www.cinecitta.de/common/ajax.php?bereich=portal&modul_id=101&klasse=vorstellungen&cli_mode=1&com=anzeigen_spielplan'
+    ).json())
+    events.sort(key=lambda event: event['begin'])
+    return events
+
+
+def debug():
+    events = []
+    with open('/Users/markus/Downloads/spielplan.json') as f:
+        parse_cinecitta(events, datetime.now(), json.load(f))
+    return events
+
+
+if __name__ == '__main__':
+    events = fetch_events(datetime.now())
+    #events = debug()
+    for event in events:
+        print('%16s  %-60s' % (
+            event['begin'],
+            event['name'] + (" (%s)" % (event['place'], )),
+        ))

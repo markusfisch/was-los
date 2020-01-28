@@ -20,7 +20,7 @@ def add_event(events, now, template, day, begin, end):
         return
     template['begin'] = begin
     template['end'] = end
-    events.append(template)
+    events.append(template.copy())
 
 
 def parse_events_nuernberg(events, now, xml):
@@ -129,21 +129,20 @@ def parse_events_nuernberg(events, now, xml):
 
 def parse_cinecitta(events, now, shows):
     for item in shows['daten']['items']:
+        template = {
+            'name': item['film_titel'],
+            'detail': item['film_beschreibung'],
+            'image_url': item['film_cover_src'],
+            'url': 'https://www.cinecitta.de/' + item['filminfo_href'],
+        }
         for theater in item['theater']:
             for screen in theater['leinwaende']:
                 place = '%s %s' % (
                     screen['theater_name'],
                     screen['leinwand_name'],
                 )
+                template['place'] = place
                 for showing in screen['vorstellungen']:
-                    template = {
-                        'name': item['film_titel'],
-                        'detail': item['film_beschreibung'],
-                        'place': place,
-                        'image_url': item['film_cover_src'],
-                        'url': 'https://www.cinecitta.de/' +
-                            item['filminfo_href'],
-                    }
                     dt = datetime.fromisoformat(showing['datum_uhrzeit_iso'])
                     add_event(
                         events,
@@ -167,18 +166,19 @@ def fetch_events(now):
     return events
 
 
-def debug():
-    events = []
-    with open('/Users/markus/Downloads/spielplan.json') as f:
-        parse_cinecitta(events, datetime.now(), json.load(f))
-    return events
+def format_date(s, today_date):
+    if today_date in s:
+        return s.replace(today_date, 'Heute')
+    else:
+        return datetime.strptime(s, '%Y-%m-%d %H:%M').strftime('%d. %b %H:%M')
 
 
 if __name__ == '__main__':
-    events = fetch_events(datetime.now())
-    #events = debug()
+    now = datetime.now()
+    events = fetch_events(now)
+    today_date = now.strftime('%Y-%m-%d')
     for event in events:
         print('%16s  %-60s' % (
-            event['begin'],
-            event['name'] + (" (%s)" % (event['place'], )),
+            format_date(event['begin'], today_date)[:16],
+            (event['name'] + (" (%s)" % (event['place'], )))[:60],
         ))

@@ -170,7 +170,7 @@ def format_date(s, today_date):
     if today_date in s:
         return s.replace(today_date, 'Heute')
     else:
-        return datetime.strptime(s, '%Y-%m-%d %H:%M').strftime('%d. %b %H:%M')
+        return datetime.strptime(s, '%Y-%m-%d %H:%M').strftime('%e. %b %H:%M')
 
 
 if __name__ == '__main__':

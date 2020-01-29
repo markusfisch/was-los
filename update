@@ -8,22 +8,22 @@ import sys
 from datetime import datetime, timedelta
 
 
-def add_event(events, now, template, day, begin, end):
+def add_event(events, from_time, to_time, template, day, begin, end):
     if begin == "":
         begin = '00:00'
     begin = day + ' ' + begin
     if end == "":
         end = '23:59'
     end = day + ' ' + end
-    if (datetime.strptime(begin, '%Y-%m-%d %H:%M') < now or
-        datetime.strptime(end, '%Y-%m-%d %H:%M') < now):
+    begin_date = datetime.strptime(begin, '%Y-%m-%d %H:%M')
+    if begin_date < from_time or begin_date > to_time:
         return
     template['begin'] = begin
     template['end'] = end
     events.append(template.copy())
 
 
-def parse_events_nuernberg(events, now, xml):
+def parse_events_nuernberg(events, from_time, to_time, xml):
     def collect_days(begin, end, weekday):
         # map german weekday abbreviations to datetime.weekday()
         if weekday == 'mo':
@@ -76,7 +76,8 @@ def parse_events_nuernberg(events, now, xml):
             d = hours.DATUM
             add_event(
                 events,
-                now,
+                from_time,
+                to_time,
                 template,
                 d.cdata,
                 d['BEGINN'],
@@ -86,7 +87,8 @@ def parse_events_nuernberg(events, now, xml):
             for d in hours.DATUM:
                 add_event(
                     events,
-                    now,
+                    from_time,
+                    to_time,
                     template,
                     d.cdata,
                     d['BEGINN'],
@@ -119,7 +121,8 @@ def parse_events_nuernberg(events, now, xml):
             for day, times in days.items():
                 add_event(
                     events,
-                    now,
+                    from_time,
+                    to_time,
                     template,
                     day,
                     times['begin'],
@@ -127,7 +130,7 @@ def parse_events_nuernberg(events, now, xml):
                 )
 
 
-def parse_cinecitta(events, now, shows):
+def parse_cinecitta(events, from_time, to_time, shows):
     for item in shows['daten']['items']:
         template = {
             'name': item['film_titel'],
@@ -146,7 +149,8 @@ def parse_cinecitta(events, now, shows):
                     dt = datetime.fromisoformat(showing['datum_uhrzeit_iso'])
                     add_event(
                         events,
-                        now,
+                        from_time,
+                        to_time,
                         template,
                         dt.strftime('%Y-%m-%d'),
                         dt.strftime('%H:%M'),
@@ -154,12 +158,12 @@ def parse_cinecitta(events, now, shows):
                     )
 
 
-def fetch_events(now):
+def fetch_events(from_time, to_time):
     events = []
-    parse_events_nuernberg(events, now, untangle.parse(
+    parse_events_nuernberg(events, from_time, to_time, untangle.parse(
         'http://meine-veranstaltungen.net/export.php5'
     ))
-    parse_cinecitta(events, now, requests.get(
+    parse_cinecitta(events, from_time, to_time, requests.get(
         'https://www.cinecitta.de/common/ajax.php?bereich=portal&modul_id=101&klasse=vorstellungen&cli_mode=1&com=anzeigen_spielplan'
     ).json())
     events.sort(key=lambda event: event['begin'])
@@ -175,7 +179,10 @@ def format_date(s, today_date):
 
 if __name__ == '__main__':
     now = datetime.now()
-    events = fetch_events(now)
+    events = fetch_events(
+        now,
+        now + timedelta(days=2)
+    )
     today_date = now.strftime('%Y-%m-%d')
     print('''<!doctype html>
 <html>
@@ -183,26 +190,24 @@ if __name__ == '__main__':
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width"/>
 <title>Was machen?</title>
+<link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet"/>
 <style>
 head, body {
     background: #222; color: #999;
     margin: 0; padding: 0;
-    font-family: Menlo, sans-serif;
+    font-family: 'Roboto Mono', Menlo, monospace;
     font-size: 110%;
     line-height: 150%;
 }
 
 a {
     color: #fff;
+    text-decoration: none;
 }
 
 table {
     margin: 0; padding: 0;
     width: 100%;
-}
-
-tr {
-    margin: 0; padding: 0;
 }
 
 td {
@@ -236,12 +241,33 @@ td.Details {
     display: block;
     font-size: 80%;
 }
+
+#Search {
+    display: none;
+    margin: 0; padding: 0;
+    position: fixed;
+    width: 100%;
+    z-index: 1;
+}
+
+#Query {
+    margin: 0; padding: 1em;
+    border: 0;
+    outline: none;
+    background: rgba(0, 0, 0, .75); color: #fff;
+    width: 100%;
+    font-family: 'Roboto Mono', Menlo, monospace;
+    font-size: 110%;
+    line-height: 150%;
+}
 </style>
 </head>
 <body>
-<table>''')
+<div id="Search"><input id="Query" type="text" placeholder="Suche"/></div>
+<table id="EventsTable">''')
     for event in events:
-        print('''<tr><td class="Image"><img src="%s" alt="%s" width="128"/></td>
+        print('''<tr><td class="Image"><img
+src="%s" alt="%s" width="128"/></td>
 <td class="Details"><span class="When">%s</span>
 <a class="Name" href="%s">%s</a>
 <span class="Place">%s</span></td></tr>''' % (
@@ -253,5 +279,27 @@ td.Details {
             event['place'],
         ))
     print('''</table>
+<script>
+'use strict'
+const W = window, D = document
+W.onload = function() {
+    let table = D.getElementById('EventsTable'),
+        search = D.getElementById('Search'),
+        query = D.getElementById('Query')
+    if (table && search && query) {
+        table.style.borderTop = '4em solid transparent'
+        search.style.display = 'block'
+        query.onkeyup = function(e) {
+            let restrict = query.value
+            for (let row of table.rows) {
+                row.style.display = row.cells[1].innerText.indexOf(
+                    restrict
+                ) > -1 ? 'block' : 'none'
+            }
+        }
+        W.scrollTo(0, 0)
+    }
+}
+</script>
 </body>
 </html>''')

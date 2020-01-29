@@ -1,7 +1,7 @@
 SCRIPT = update
 HTML = was.html
 
-$(HTML):
+$(HTML): $(SCRIPT)
 	./$(SCRIPT) > $@
 
 up: $(HTML)

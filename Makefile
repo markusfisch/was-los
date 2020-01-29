@@ -8,7 +8,7 @@ up: $(HTML)
 	scp $(HTML) hhsw.de@ssh.strato.de:
 
 format:
-	pep8ify -n -w $(SCRIPT)
+	pep8ify -n -w -f maximum_line_length $(SCRIPT)
 
 clean:
 	rm -f $(HTML)

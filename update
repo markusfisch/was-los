@@ -177,19 +177,13 @@ def format_date(s, today_date):
         return datetime.strptime(s, '%Y-%m-%d %H:%M').strftime('%e. %b %H:%M')
 
 
-if __name__ == '__main__':
-    now = datetime.now()
-    events = fetch_events(
-        now,
-        now + timedelta(days=2)
-    )
-    today_date = now.strftime('%Y-%m-%d')
-    print('''<!doctype html>
+def write_html(f, events, weekday, today_date):
+    f.write(f'''<!doctype html>
 <html>
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width"/>
-<title>Was machen?</title>
+<title>''' + weekday + '''</title>
 <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet"/>
 <style>
 head, body {
@@ -265,13 +259,15 @@ td.Details {
 </head>
 <body>
 <div id="Search"><input id="Query" type="text" placeholder="Suche"/></div>
-<table id="EventsTable">''')
+<table id="EventsTable">
+''')
     for event in events:
-        print('''<tr><td class="Image"><img
+        f.write('''<tr><td class="Image"><img
 src="%s" alt="%s" width="128"/></td>
 <td class="Details"><span class="When">%s</span>
 <a class="Name" href="%s">%s</a>
-<span class="Place">%s</span></td></tr>''' % (
+<span class="Place">%s</span></td></tr>
+''' % (
             event['image_url'],
             event['name'],
             format_date(event['begin'], today_date),
@@ -279,7 +275,7 @@ src="%s" alt="%s" width="128"/></td>
             event['name'],
             event['place'],
         ))
-    print('''</table>
+    f.write('''</table>
 <script>
 'use strict'
 const W = window, D = document
@@ -312,4 +308,37 @@ W.onload = () => {
 }
 </script>
 </body>
-</html>''')
+</html>
+''')
+
+
+def name_of_day(date_string):
+    return datetime.strptime(date_string, '%Y-%m-%d').strftime('%a')
+
+
+def events_per_days(events):
+    day = None
+    last = None
+    for event in events:
+        date = event['begin'].split(' ')[0]
+        if date != last:
+            if day is not None:
+                yield day, name_of_day(last)
+            day = [event]
+        else:
+            day.append(event)
+        last = date
+    if day is not None:
+        yield day, name_of_day(last)
+
+
+if __name__ == '__main__':
+    now = datetime.now()
+    events = fetch_events(
+        now,
+        now + timedelta(days=6)
+    )
+    today_date = now.strftime('%Y-%m-%d')
+    for events_day, weekday in events_per_days(events):
+        with open('%s.html' % (weekday.lower(), ), 'w') as f:
+            write_html(f, events_day, weekday, today_date)

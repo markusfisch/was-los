@@ -281,8 +281,9 @@ src="%s" alt="%s" width="128"/></td>
 const W = window, D = document
 
 function filter(table, value) {
+    value = value.toLowerCase()
     for (let row of table.rows) {
-        row.style.display = row.cells[1].innerText.indexOf(
+        row.style.display = row.cells[1].innerText.toLowerCase().indexOf(
             value
         ) > -1 ? 'table-row' : 'none'
     }

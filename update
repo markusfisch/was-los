@@ -246,6 +246,7 @@ td.Details {
     display: none;
     margin: 0; padding: 0;
     position: fixed;
+    bottom: 0;
     width: 100%;
     z-index: 1;
 }
@@ -282,22 +283,31 @@ src="%s" alt="%s" width="128"/></td>
 <script>
 'use strict'
 const W = window, D = document
-W.onload = function() {
-    let table = D.getElementById('EventsTable'),
+
+function filter(table, value) {
+    for (let row of table.rows) {
+        row.style.display = row.cells[1].innerText.indexOf(
+            value
+        ) > -1 ? 'table-row' : 'none'
+    }
+}
+
+W.onload = () => {
+    const table = D.getElementById('EventsTable'),
         search = D.getElementById('Search'),
         query = D.getElementById('Query')
     if (table && search && query) {
-        table.style.borderTop = '4em solid transparent'
-        search.style.display = 'block'
-        query.onkeyup = function(e) {
-            let restrict = query.value
-            for (let row of table.rows) {
-                row.style.display = row.cells[1].innerText.indexOf(
-                    restrict
-                ) > -1 ? 'block' : 'none'
+        let timer = null
+        query.onkeyup = () => {
+            if (timer) {
+                clearTimeout(timer)
             }
+            timer = setTimeout(() => {
+                filter(table, query.value.trim())
+            }, 300)
         }
-        W.scrollTo(0, 0)
+        search.style.display = 'block'
+        query.focus()
     }
 }
 </script>

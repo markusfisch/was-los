@@ -1,9 +1,9 @@
 SCRIPT = update
 
-fetch: $(SCRIPT)
+fetch:
 	./$(SCRIPT)
 
-up: fetch
+up:
 	scp *.html hhsw.de@ssh.strato.de:
 
 format:

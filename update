@@ -177,8 +177,81 @@ if __name__ == '__main__':
     now = datetime.now()
     events = fetch_events(now)
     today_date = now.strftime('%Y-%m-%d')
+    print('''<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width"/>
+<title>Was machen?</title>
+<style>
+head, body {
+    background: #222; color: #999;
+    margin: 0; padding: 0;
+    font-family: Menlo, sans-serif;
+    font-size: 110%;
+    line-height: 150%;
+}
+
+a {
+    color: #fff;
+}
+
+table {
+    margin: 0; padding: 0;
+    width: 100%;
+}
+
+tr {
+    margin: 0; padding: 0;
+}
+
+td {
+    vertical-align: top;
+    border-bottom: 1px solid #333;
+}
+
+td.Image {
+    margin: 0; padding: 0;
+}
+
+td.Image img {
+    display: block;
+}
+
+td.Details {
+    margin: 0; padding: .66em 1em;
+    width: 100%;
+}
+
+.When {
+    display: block;
+}
+
+.Name {
+    display: block;
+    font-size: 120%;
+}
+
+.Place {
+    display: block;
+    font-size: 80%;
+}
+</style>
+</head>
+<body>
+<table>''')
     for event in events:
-        print('%16s  %-60s' % (
-            format_date(event['begin'], today_date)[:16],
-            (event['name'] + (" (%s)" % (event['place'], )))[:60],
+        print('''<tr><td class="Image"><img src="%s" alt="%s" width="128"/></td>
+<td class="Details"><span class="When">%s</span>
+<a class="Name" href="%s">%s</a>
+<span class="Place">%s</span></td></tr>''' % (
+            event['image_url'],
+            event['name'],
+            format_date(event['begin'], today_date),
+            event['url'],
+            event['name'],
+            event['place'],
         ))
+    print('''</table>
+</body>
+</html>''')

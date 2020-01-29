@@ -1,5 +1,5 @@
 SCRIPT = update
-HTML = what-to-do.html
+HTML = was.html
 
 $(HTML):
 	./$(SCRIPT) > $@

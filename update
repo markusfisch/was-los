@@ -166,7 +166,7 @@ def fetch_events(from_time, to_time):
     parse_cinecitta(events, from_time, to_time, requests.get(
         'https://www.cinecitta.de/common/ajax.php?bereich=portal&modul_id=101&klasse=vorstellungen&cli_mode=1&com=anzeigen_spielplan'
     ).json())
-    events.sort(key=lambda event: event['begin'])
+    events.sort(key=lambda event: event['begin'] + event['name'])
     return events
 
 

@@ -64,8 +64,10 @@ def parse_events_nuernberg(events, from_time, to_time, xml):
         template = {
             'name': event.TITEL.cdata,
             'place': event.ORT.cdata,
-            'image_url': event.BILD.cdata,
-            'url': event.DETAILLINK.cdata if 'DETAILLINK' in elements_in_event else "",
+            'image_url': event.BILD.cdata if
+                'BILD' in elements_in_event else '#',
+            'url': event.DETAILLINK.cdata if
+                'DETAILLINK' in elements_in_event else '#',
         }
         # add an event for all opening hours
         hours = event.OEFFNUNGSZEITEN

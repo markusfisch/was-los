@@ -63,7 +63,6 @@ def parse_events_nuernberg(events, from_time, to_time, xml):
         elements_in_event = dir(event)
         template = {
             'name': event.TITEL.cdata,
-            'detail': event.UNTERTITEL.cdata,
             'place': event.ORT.cdata,
             'image_url': event.BILD.cdata,
             'url': event.DETAILLINK.cdata if 'DETAILLINK' in elements_in_event else "",
@@ -134,7 +133,6 @@ def parse_cinecitta(events, from_time, to_time, shows):
     for item in shows['daten']['items']:
         template = {
             'name': item['film_titel'],
-            'detail': item['film_beschreibung'],
             'image_url': item['film_cover_src'],
             'url': 'https://www.cinecitta.de/' + item['filminfo_href'],
         }

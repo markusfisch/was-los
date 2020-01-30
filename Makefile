@@ -1,13 +1,22 @@
-SCRIPT = update
+HTDOCS = htdocs
+DATA = events.json
+WEBROOT = hhsw.de@ssh.strato.de:sites/wasmachen
+OPTIONS = \
+	--recursive \
+	--links \
+	--update \
+	--delete-after \
+	--times \
+	--compress
 
-fetch:
-	./$(SCRIPT)
+live: $(DATA)
+	rsync $(OPTIONS) $(HTDOCS)/* $(WEBROOT)
 
-up:
-	scp *.html hhsw.de@ssh.strato.de:
+$(DATA):
+	./fetch_events.py
 
 format:
-	pep8ify -n -w -f maximum_line_length $(SCRIPT)
+	pep8ify -n -w -f maximum_line_length *.py
 
 clean:
-	rm -f *.html
+	rm -f $(DATA)

@@ -391,12 +391,16 @@ def generate_files(events, now):
         yield name_of_day(last), chunk
 
 
-if __name__ == '__main__':
+def main(path='.'):
     now = datetime.now()
     events = fetch_events(
         now,
         now + timedelta(days=6)
     )
     for file_name, contents in generate_files(events, now):
-        with open('htdocs/%s.html' % (file_name, ), 'w') as f:
+        with open('%s/%s.html' % (path, file_name, ), 'w') as f:
             write_html(f, contents, now, file_name)
+
+
+if __name__ == '__main__':
+    main( * sys.argv[1:])

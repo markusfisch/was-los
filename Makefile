@@ -12,7 +12,7 @@ live: update
 	rsync $(OPTIONS) $(HTDOCS)/* $(WEBROOT)
 
 update:
-	./update_events.py
+	./bin/update_events.py $(HTDOCS)
 
 format:
 	pep8ify -n -w -f maximum_line_length *.py

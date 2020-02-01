@@ -268,7 +268,7 @@ td.Details {
 }
 
 .Active {
-\tcolor: #59e;
+\tcolor: #333;
 }
 
 #Query {

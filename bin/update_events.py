@@ -20,7 +20,12 @@ def add_event(events, from_time, to_time, template, day, begin, end):
         return
     template['begin'] = begin
     template['end'] = end
-    events.append(template.copy())
+    key = begin + end + template['name']
+    event = events.get(key)
+    if event is not None:
+        event['place'] += ', ' + template['place']
+    else:
+        events[key] = template.copy()
 
 
 def parse_events_nuernberg(events, from_time, to_time, xml):
@@ -159,13 +164,14 @@ def parse_cinecitta(events, from_time, to_time, shows):
 
 
 def fetch_events(from_time, to_time):
-    events = []
+    events = {}
     parse_events_nuernberg(events, from_time, to_time, untangle.parse(
         'http://meine-veranstaltungen.net/export.php5'
     ))
     parse_cinecitta(events, from_time, to_time, requests.get(
         'https://www.cinecitta.de/common/ajax.php?bereich=portal&modul_id=101&klasse=vorstellungen&cli_mode=1&com=anzeigen_spielplan'
     ).json())
+    events = [v for v in events.values()]
     events.sort(key=lambda event: event['begin'] + event['name'])
     return events
 

@@ -247,10 +247,11 @@ td.Details {
 #DaySelector {
 \tdisplay: flex;
 \tflex-direction: row;
+\tpadding: 1em 0 0;
 }
 
 #DaySelector .Day {
-\tpadding: 1em 1em 0;
+\tpadding: 0 1em;
 \tflex-grow: 1;
 \ttext-align: center;
 \tfont-size: min(4vw, 110%);

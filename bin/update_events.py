@@ -195,8 +195,6 @@ head, body {
 \tbackground: #222; color: #999;
 \tmargin: 0; padding: 0 0 10em;
 \tfont-family: 'Roboto Mono', Menlo, monospace;
-\tfont-size: 110%;
-\tline-height: 150%;
 }
 
 a {
@@ -228,18 +226,13 @@ td.Details {
 \twidth: 100%;
 }
 
-.When {
+.When, .Name, .Place {
 \tdisplay: block;
 }
 
 .Name {
-\tdisplay: block;
-\tfont-size: 120%;
-}
-
-.Place {
-\tdisplay: block;
-\tfont-size: 80%;
+\tpadding: .2em 0;
+\tfont-size: 125%;
 }
 
 #Search {

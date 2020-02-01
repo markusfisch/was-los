@@ -216,6 +216,7 @@ td {
 
 td.Image {
 \tmargin: 0; padding: 0;
+\tbackground: #111;
 }
 
 td.Image img {

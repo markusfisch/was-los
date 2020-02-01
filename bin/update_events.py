@@ -190,94 +190,8 @@ def write_html(f, events, now, name):
 <meta name="msapplication-navbutton-color" content="#111"/>
 <title>Was machen?</title>
 <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet"/>
-<style>
-head, body {
-\tbackground: #222; color: #999;
-\tmargin: 0; padding: 0 0 10em;
-\tfont-family: 'Roboto Mono', Menlo, monospace;
-}
-
-a {
-\tcolor: #fff;
-\ttext-decoration: none;
-}
-
-table {
-\tmargin: 0; padding: 0;
-\twidth: 100%;
-}
-
-td {
-\tvertical-align: top;
-\tborder-bottom: 1px solid #333;
-}
-
-td.Image {
-\tmargin: 0; padding: 0;
-\tbackground: #111;
-}
-
-td.Image img {
-\tdisplay: block;
-}
-
-td.Details {
-\tmargin: 0; padding: .66em 1em;
-\twidth: 100%;
-}
-
-.When, .Name, .Place {
-\tdisplay: block;
-}
-
-.Name {
-\tpadding: .2em 0;
-\tfont-size: 125%;
-}
-
-#Search {
-\tmargin: 0; padding: 0;
-\tposition: fixed;
-\tbottom: 0;
-\twidth: 100%;
-\tz-index: 1;
-\tbackground: rgba(0, 0, 0, .75);
-}
-
-#DaySelector {
-\tdisplay: flex;
-\tflex-direction: row;
-\tpadding: 1em 0 0;
-}
-
-#DaySelector .Day {
-\tpadding: 0 1em;
-\tflex-grow: 1;
-\ttext-align: center;
-\tfont-size: min(4vw, 110%);
-\tborder-right: 1px solid #333;
-}
-
-#DaySelector .Day:last-child {
-\tborder: 0;
-}
-
-.Active {
-\tcolor: #333;
-}
-
-#Query {
-\tdisplay: none;
-\tmargin: 0; padding: 1em;
-\tborder: 0;
-\toutline: none;
-\tbackground: transparent; color: #fff;
-\twidth: 100%;
-\tfont-family: 'Roboto Mono', Menlo, monospace;
-\tfont-size: 110%;
-\tline-height: 150%;
-}
-</style>
+<link href="screen.css" rel="stylesheet"/>
+<script defer async src="search.js"></script>
 </head>
 <body>
 <div id="Search"><div id="DaySelector">''')
@@ -315,37 +229,6 @@ src="%s" alt="%s" width="128"/></td>
             event['place'],
         ))
     f.write('''</table>
-<script>
-'use strict'
-const W = window, D = document
-
-function filter(table, value) {
-\tvalue = value.toLowerCase()
-\tfor (let row of table.rows) {
-\t\trow.style.display = row.cells[1].innerText.toLowerCase().indexOf(
-\t\t\tvalue
-\t\t) > -1 ? 'table-row' : 'none'
-\t}
-}
-
-W.onload = () => {
-\tconst table = D.getElementById('EventsTable'),
-\t\tsearch = D.getElementById('Search'),
-\t\tquery = D.getElementById('Query')
-\tif (table && search && query) {
-\t\tlet timer = null
-\t\tquery.onkeyup = () => {
-\t\t\tif (timer) {
-\t\t\t\tclearTimeout(timer)
-\t\t\t}
-\t\t\ttimer = setTimeout(() => {
-\t\t\t\tfilter(table, query.value.trim())
-\t\t\t}, 300)
-\t\t}
-\t\tquery.style.display = 'block'
-\t\tquery.focus()
-\t}
-}
 </script>
 </body>
 </html>

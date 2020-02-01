@@ -1,0 +1,88 @@
+head, body {
+	background: #222; color: #999;
+	margin: 0; padding: 0 0 10em;
+	font-family: 'Roboto Mono', Menlo, monospace;
+}
+
+a {
+	color: #fff;
+	text-decoration: none;
+}
+
+table {
+	margin: 0; padding: 0;
+	width: 100%;
+}
+
+td {
+	vertical-align: top;
+	border-bottom: 1px solid #333;
+}
+
+td.Image {
+	margin: 0; padding: 0;
+	background: #111;
+}
+
+td.Image img {
+	display: block;
+}
+
+td.Details {
+	margin: 0; padding: .66em 1em;
+	width: 100%;
+	overflow-wrap: break-word;
+	word-break: break-word;
+}
+
+.When, .Name, .Place {
+	display: block;
+}
+
+.Name {
+	padding: .2em 0;
+	font-size: 125%;
+}
+
+#Search {
+	margin: 0; padding: 0;
+	position: fixed;
+	bottom: 0;
+	width: 100%;
+	z-index: 1;
+	background: rgba(0, 0, 0, .75);
+}
+
+#DaySelector {
+	display: flex;
+	flex-direction: row;
+	padding: 1em 0 0;
+}
+
+#DaySelector .Day {
+	padding: 0 1em;
+	flex-grow: 1;
+	text-align: center;
+	font-size: min(4vw, 110%);
+	border-right: 1px solid #333;
+}
+
+#DaySelector .Day:last-child {
+	border: 0;
+}
+
+.Active {
+	color: #333;
+}
+
+#Query {
+	display: none;
+	margin: 0; padding: 1em;
+	border: 0;
+	outline: none;
+	background: transparent; color: #fff;
+	width: 100%;
+	font-family: 'Roboto Mono', Menlo, monospace;
+	font-size: 110%;
+	line-height: 150%;
+}

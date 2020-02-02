@@ -23,7 +23,8 @@ def add_event(events, from_time, to_time, template, day, begin, end):
     key = begin + end + template['name']
     event = events.get(key)
     if event is not None:
-        event['place'] += ', ' + template['place']
+        if event['place'].lower() != template['place'].lower():
+            event['place'] += ', ' + template['place']
     else:
         events[key] = template.copy()
 

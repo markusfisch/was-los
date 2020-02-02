@@ -29,7 +29,7 @@ td.Image img {
 }
 
 td.Details {
-	margin: 0; padding: .66em 1em;
+	margin: 0; padding: .66em 1em 1em;
 	width: 100%;
 	overflow-wrap: break-word;
 	word-break: break-word;

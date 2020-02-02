@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   inkscape:export-ydpi="96"
+   inkscape:export-xdpi="96"
+   inkscape:export-filename="/Users/markus/.sesame/src/was-machen/htdocs/icon_ios.png"
+   inkscape:version="1.0beta1 (32d4812, 2019-09-19)"
+   sodipodi:docname="icon.svg"
+   id="svg839"
+   version="1.1"
+   height="128"
+   width="128">
+  <metadata
+     id="metadata845">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs843" />
+  <sodipodi:namedview
+     inkscape:current-layer="svg839"
+     inkscape:window-maximized="0"
+     inkscape:window-y="0"
+     inkscape:window-x="0"
+     inkscape:cy="64"
+     inkscape:cx="64"
+     inkscape:zoom="0.96536649"
+     showborder="false"
+     inkscape:showpageshadow="false"
+     showgrid="false"
+     id="namedview841"
+     inkscape:window-height="907"
+     inkscape:window-width="1600"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0"
+     guidetolerance="10"
+     gridtolerance="10"
+     objecttolerance="10"
+     borderopacity="1"
+     inkscape:document-rotation="0"
+     bordercolor="#666666"
+     pagecolor="#ffffff" />
+  <rect
+     y="160"
+     x="0"
+     height="128"
+     width="128"
+     id="rect2984"
+     style="fill:#222222;fill-opacity:1;stroke-width:3.05355;stroke-linejoin:round;stroke-dasharray:3.05355, 9.16065" />
+  <circle
+     r="64"
+     id="circle833"
+     cy="64"
+     cx="64"
+     style="fill:#222222;fill-opacity:1" />
+  <path
+     d="M 61.682281,74.20887 A 20.41774,20.41774 0 0 1 38.7155,83.722022 20.41774,20.41774 0 0 1 23.58226,64 20.41774,20.41774 0 0 1 38.7155,44.277978 20.41774,20.41774 0 0 1 61.682281,53.79113 L 44,64 Z"
+     sodipodi:arc-type="slice"
+     sodipodi:end="5.7595865"
+     sodipodi:start="0.52359878"
+     sodipodi:ry="20.41774"
+     sodipodi:rx="20.41774"
+     sodipodi:cy="64"
+     sodipodi:cx="44"
+     sodipodi:type="arc"
+     style="fill:#ffffff;fill-opacity:1;stroke-width:0.319027"
+     id="circle847" />
+  <circle
+     style="fill:#ffffff;fill-opacity:1;stroke-width:0.0762435"
+     cx="84"
+     cy="64"
+     id="circle2974"
+     r="4.8796" />
+  <circle
+     r="4.8796"
+     id="circle2978"
+     cy="64"
+     cx="104"
+     style="fill:#ffffff;fill-opacity:1;stroke-width:0.0762435" />
+</svg>

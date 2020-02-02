@@ -5,7 +5,7 @@ update:
 
 install:
 	scp bin/update_events.py m9h@menkent.uberspace.de:bin/
-	scp htdocs/*.js htdocs/*.css htdocs/.htaccess \
+	scp htdocs/*.js* htdocs/*.css htdocs/*.png htdocs/.htaccess \
 		m9h@menkent.uberspace.de:html/
 
 format:

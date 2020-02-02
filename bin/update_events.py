@@ -199,7 +199,7 @@ def write_html(f, style, events, now, name):
 <style>''')
     f.write(style)
     f.write('''</style>
-<script defer async src="search.js"></script>
+<script defer src="search.js"></script>
 </head>
 <body>''')
     f.write('<table id="EventsTable">')

@@ -184,7 +184,7 @@ def format_date(s, now):
         return datetime.strptime(s, '%Y-%m-%d %H:%M').strftime('%H:%M, %e. %b')
 
 
-def write_html(f, events, now, name):
+def write_html(f, style, events, now, name):
     f.write('''<!doctype html>
 <html>
 <head>
@@ -196,7 +196,9 @@ def write_html(f, events, now, name):
 <meta name="msapplication-navbutton-color" content="#111"/>
 <title>Was machen?</title>
 <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet"/>
-<link href="screen.css" rel="stylesheet"/>
+<style>''')
+    f.write(style)
+    f.write('''</style>
 <script defer async src="search.js"></script>
 </head>
 <body>''')
@@ -274,6 +276,7 @@ def generate_files(events, now):
 
 
 def main(path='.'):
+    style = open('%s/screen.css' % (path, ), 'r').read()
     now = datetime.now()
     events = fetch_events(
         now,
@@ -281,7 +284,7 @@ def main(path='.'):
     )
     for file_name, contents in generate_files(events, now):
         with open('%s/%s.html' % (path, file_name, ), 'w') as f:
-            write_html(f, contents, now, file_name)
+            write_html(f, style, contents, now, file_name)
 
 
 if __name__ == '__main__':

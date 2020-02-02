@@ -199,7 +199,23 @@ def write_html(f, events, now, name):
 <link href="screen.css" rel="stylesheet"/>
 <script defer async src="search.js"></script>
 </head>
-<body>
+<body>''')
+    f.write('<table id="EventsTable">')
+    for event in events:
+        f.write('''<tr><td class="Image"><img
+src="%s" alt="%s" width="128"/></td>
+<td class="Details"><div class="When">%s</div>
+<a class="Name" href="%s">%s</a>
+<div class="Place">%s</div></td></tr>
+''' % (
+            event['image_url'],
+            event['name'],
+            format_date(event['begin'], now),
+            event['url'],
+            event['name'],
+            event['place'],
+        ))
+    f.write('''</table>
 <div id="Search"><div id="DaySelector">''')
     if name.isdigit():
         name = now.strftime('%a').lower()
@@ -218,24 +234,6 @@ def write_html(f, events, now, name):
             label,
         ))
     f.write('''</div><input id="Query" type="text" placeholder="Suche"/></div>
-<table id="EventsTable">
-''')
-    for event in events:
-        f.write('''<tr><td class="Image"><img
-src="%s" alt="%s" width="128"/></td>
-<td class="Details"><span class="When">%s</span>
-<a class="Name" href="%s">%s</a>
-<span class="Place">%s</span></td></tr>
-''' % (
-            event['image_url'],
-            event['name'],
-            format_date(event['begin'], now),
-            event['url'],
-            event['name'],
-            event['place'],
-        ))
-    f.write('''</table>
-</script>
 </body>
 </html>
 ''')

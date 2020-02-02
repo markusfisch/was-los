@@ -1,5 +1,5 @@
 head, body {
-	background: #222; color: #999;
+	background: #111; color: #999;
 	margin: 0; padding: 0 0 16em;
 	font-family: 'Roboto Mono', Menlo, monospace;
 }
@@ -33,6 +33,7 @@ td.Image img {
 
 td.Details {
 	margin: 0; padding: .66em 1em 1em;
+	background: #222;
 	width: 100%;
 	overflow-wrap: break-word;
 	word-break: break-word;

@@ -26,6 +26,9 @@ td.Image {
 
 td.Image img {
 	display: block;
+	overflow: hidden;
+	overflow-wrap: break-word;
+	word-break: break-word;
 }
 
 td.Details {

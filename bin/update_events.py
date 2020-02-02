@@ -279,12 +279,12 @@ def generate_files(events, now):
 
 
 def main(path='.'):
+    # Embed style sheet to avoid unstyled display when the resource isn't
+    # loaded in time, e.g. on a mobile connection. It's small enough to not
+    # add any noticeable weight so that's the better option.
     style = open('%s/screen.css' % (path, ), 'r').read()
     now = datetime.now()
-    events = fetch_events(
-        now,
-        now + timedelta(days=6)
-    )
+    events = fetch_events(now, now + timedelta(days=6))
     for file_name, contents in generate_files(events, now):
         with open('%s/%s.html' % (path, file_name, ), 'w') as f:
             write_html(f, style, contents, now, file_name)

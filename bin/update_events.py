@@ -215,12 +215,13 @@ def write_html(f, style, events, now, name):
     for event in events:
         f.write('''<tr><td class="Image"><img
 src="%s" alt="%s" width="128"/></td>
-<td class="Details"><div class="When">%s</div>
+<td class="Details"><time datetime="%s" class="When">%s</time>
 <a class="Name" href="%s">%s</a>
 <div class="Place">%s</div></td></tr>
 ''' % (
             event['image_url'],
             event['name'],
+            event['begin'],
             format_date(event['begin'], now),
             event['url'],
             event['name'],

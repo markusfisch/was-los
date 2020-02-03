@@ -254,37 +254,39 @@ src="%s" alt="%s" width="128"/></td>
 
 
 def generate_files(events, now):
-    now_date = now.date()
-    # generate files that start from every hour of today until the
-    # end of the day
-    for hour in range(24):
+    def filter_events(events, from_time):
+        # let days end at 3'o clock
+        to_time = from_time + timedelta(days=1)
+        to_time = datetime(
+            to_time.year,
+            to_time.month,
+            to_time.day,
+            3
+        )
         chunk = []
         for event in events:
             dt = datetime.strptime(event['begin'], '%Y-%m-%d %H:%M')
-            date = dt.date()
-            if date < now_date or hour > dt.hour:
+            if dt < from_time:
                 continue
-            if date > now_date:
+            if dt > to_time:
                 break
             chunk.append(event)
-        if len(chunk) > 0:
-            yield '%02d' % (hour, ), chunk
+        return chunk
+
+    # generate files that start from every hour of today until the
+    # end of the day
+    for hour in range(24):
+        # yield even if chunk is empty so there will be a file for it
+        yield '%02d' % (hour, ), filter_events(
+            events,
+            datetime(now.year, now.month, now.day, hour),
+        )
     # generate a file for every weekday
-    def name_of_day(date):
-        return date.strftime('%a').lower()
-    chunk = None
-    last = None
-    for event in events:
-        date = datetime.strptime(event['begin'], '%Y-%m-%d %H:%M').date()
-        if date != last:
-            if chunk is not None:
-                yield name_of_day(last), chunk
-            chunk = [event]
-        else:
-            chunk.append(event)
-        last = date
-    if chunk is not None:
-        yield name_of_day(last), chunk
+    dt = datetime(now.year, now.month, now.day)
+    for i in range(7):
+        # yield even if chunk is empty so there will be a file for it
+        yield dt.strftime('%a').lower(), filter_events(events, dt)
+        dt += timedelta(days=1)
 
 
 def main(path='.'):

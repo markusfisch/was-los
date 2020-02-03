@@ -190,8 +190,7 @@ def format_date(s, now):
     today_date = now.strftime('%Y-%m-%d')
     if today_date in s:
         return s.replace(today_date, 'Heute')
-    else:
-        return datetime.strptime(s, '%Y-%m-%d %H:%M').strftime('%H:%M, %e. %b')
+    return datetime.strptime(s, '%Y-%m-%d %H:%M').strftime('%H:%M, %e. %b')
 
 
 def write_html(f, style, events, now, name):

@@ -165,19 +165,23 @@ def parse_cinecitta(events, from_time, to_time, shows):
 
 
 def fetch_events(from_time, to_time):
+    # use a dict to be able to merge events
     events = {}
     try:
         parse_events_nuernberg(events, from_time, to_time, untangle.parse(
             'http://meine-veranstaltungen.net/export.php5'
         ))
     except:
+        # silently ignore failures; maybe cinecitta will succeed
         pass
     try:
         parse_cinecitta(events, from_time, to_time, requests.get(
             'https://www.cinecitta.de/common/ajax.php?bereich=portal&modul_id=101&klasse=vorstellungen&cli_mode=1&com=anzeigen_spielplan'
         ).json())
     except:
+        # silently ignore failures; maybe events succeeded
         pass
+    # now we need a list to sort the events by time and name
     events = [v for v in events.values()]
     events.sort(key=lambda event: event['begin'] + event['name'])
     return events

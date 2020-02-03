@@ -217,7 +217,7 @@ def write_html(f, style, events, now, name):
 src="%s" alt="%s" width="128"/></td>
 <td class="Details"><time datetime="%s" class="When">%s</time>
 <a class="Name" href="%s">%s</a>
-<div class="Place">%s</div></td></tr>
+<address class="Place">%s</address></td></tr>
 ''' % (
             event['image_url'],
             event['name'],

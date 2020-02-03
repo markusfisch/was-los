@@ -43,6 +43,7 @@ td.Details {
 
 .When, .Name, .Place {
 	display: block;
+	font-style: normal;
 }
 
 .Name {

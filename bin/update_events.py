@@ -166,12 +166,18 @@ def parse_cinecitta(events, from_time, to_time, shows):
 
 def fetch_events(from_time, to_time):
     events = {}
-    parse_events_nuernberg(events, from_time, to_time, untangle.parse(
-        'http://meine-veranstaltungen.net/export.php5'
-    ))
-    parse_cinecitta(events, from_time, to_time, requests.get(
-        'https://www.cinecitta.de/common/ajax.php?bereich=portal&modul_id=101&klasse=vorstellungen&cli_mode=1&com=anzeigen_spielplan'
-    ).json())
+    try:
+        parse_events_nuernberg(events, from_time, to_time, untangle.parse(
+            'http://meine-veranstaltungen.net/export.php5'
+        ))
+    except:
+        pass
+    try:
+        parse_cinecitta(events, from_time, to_time, requests.get(
+            'https://www.cinecitta.de/common/ajax.php?bereich=portal&modul_id=101&klasse=vorstellungen&cli_mode=1&com=anzeigen_spielplan'
+        ).json())
+    except:
+        pass
     events = [v for v in events.values()]
     events.sort(key=lambda event: event['begin'] + event['name'])
     return events

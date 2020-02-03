@@ -22,11 +22,10 @@ def add_event(events, from_time, to_time, template, day, begin, end):
     template['end'] = end
     key = begin + end + template['name']
     event = events.get(key)
-    if event is not None:
-        if event['place'].lower() != template['place'].lower():
-            event['place'] += ', ' + template['place']
-    else:
+    if event is None:
         events[key] = template.copy()
+    elif event['place'].lower() != template['place'].lower():
+        event['place'] += ', ' + template['place']
 
 
 def parse_events_nuernberg(events, from_time, to_time, xml):

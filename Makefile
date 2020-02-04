@@ -1,12 +1,14 @@
+GENERATOR = ./bin/update_events.py
 HTDOCS = htdocs
+SERVER = m9h@menkent.uberspace.de
 
 html: clean
-	./bin/update_events.py $(HTDOCS) res/screen.css
+	$(GENERATOR) $(HTDOCS) res/screen.css
 
 install:
-	scp bin/update_events.py m9h@menkent.uberspace.de:bin/
-	scp htdocs/*.js* htdocs/*.png htdocs/.htaccess \
-		m9h@menkent.uberspace.de:html/
+	scp $(GENERATOR) $(SERVER):bin/
+	scp $(HTDOCS)/*.js* $(HTDOCS)/*.png $(HTDOCS)/.htaccess \
+		$(SERVER):html/
 
 format:
 	pep8ify -n -w -f maximum_line_length bin/*.py

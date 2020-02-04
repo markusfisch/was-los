@@ -1,6 +1,6 @@
 HTDOCS = htdocs
 
-update:
+update: clean
 	./bin/update_events.py $(HTDOCS)
 
 install:

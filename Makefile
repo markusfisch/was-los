@@ -1,11 +1,11 @@
 HTDOCS = htdocs
 
-update: clean
-	./bin/update_events.py $(HTDOCS)
+html: clean
+	./bin/update_events.py $(HTDOCS) res/screen.css
 
 install:
 	scp bin/update_events.py m9h@menkent.uberspace.de:bin/
-	scp htdocs/*.js* htdocs/*.css htdocs/*.png htdocs/.htaccess \
+	scp htdocs/*.js* htdocs/*.png htdocs/.htaccess \
 		m9h@menkent.uberspace.de:html/
 
 format:

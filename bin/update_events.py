@@ -271,11 +271,11 @@ def generate_files(events, now):
         dt += timedelta(days=1)
 
 
-def main(path='.'):
+def main(path='.', stylesheet='screen.css'):
     # Embed style sheet to avoid unstyled display when the resource isn't
     # loaded in time, e.g. on a mobile connection. It's small enough to not
     # add any noticeable weight so that's the better option.
-    style = open('%s/screen.css' % (path, ), 'r').read()
+    style = open(stylesheet, 'r').read()
     now = datetime.now()
     events = fetch_events(now, now + timedelta(days=6))
     for file_name, contents in generate_files(events, now):

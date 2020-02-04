@@ -8,19 +8,13 @@ import sys
 from datetime import datetime, timedelta
 
 
-def add_event(events, from_time, to_time, template, day, begin, end):
-    if begin == "":
-        begin = '00:00'
-    begin = day + ' ' + begin
-    if end == "":
-        end = '23:59'
-    end = day + ' ' + end
+def add_event(events, from_time, to_time, template, day, begin):
+    begin = day + ' ' + (begin if begin != "" else '00:00')
     begin_date = datetime.strptime(begin, '%Y-%m-%d %H:%M')
     if begin_date < from_time or begin_date > to_time:
         return
     template['begin'] = begin
-    template['end'] = end
-    key = begin + end + template['name']
+    key = begin + template['name']
     event = events.get(key)
     if event is None:
         events[key] = template.copy()
@@ -87,7 +81,6 @@ def parse_events_nuernberg(events, from_time, to_time, xml):
                 template,
                 d.cdata,
                 d['BEGINN'],
-                d['ENDE'],
             )
         elif t == '2' or 'DATUM' in elements_in_hours:
             for d in hours.DATUM:
@@ -98,7 +91,6 @@ def parse_events_nuernberg(events, from_time, to_time, xml):
                     template,
                     d.cdata,
                     d['BEGINN'],
-                    d['ENDE'],
                 )
         elif t == '3' or 'OFFENETAGE' in elements_in_hours:
             days = {}
@@ -108,10 +100,7 @@ def parse_events_nuernberg(events, from_time, to_time, xml):
             if 'OFFENETAGE' in elements_in_hours:
                 for d in hours.OFFENETAGE.OFFENERTAG:
                     for day in collect_days(begin, end, d.cdata):
-                        days[day] = {
-                            'begin': d['BEGINN'],
-                            'end': d['ENDE'],
-                        }
+                        days[day] = d['BEGINN']
             # remove exceptions
             if 'AUSNAHMEN' in elements_in_hours:
                 for day in filter(None, hours.AUSNAHMEN.cdata.split(';')):
@@ -120,19 +109,15 @@ def parse_events_nuernberg(events, from_time, to_time, xml):
             if ('ABWEICHENDETAGE' in elements_in_hours and
                 'ABWEICHENDERTAG' in dir(hours.ABWEICHENDETAGE)):
                 for d in hours.ABWEICHENDETAGE.ABWEICHENDERTAG:
-                    days[d.cdata] = {
-                        'begin': d['BEGINN'],
-                        'end': d['ENDE'],
-                    }
-            for day, times in days.items():
+                    days[d.cdata] = d['BEGINN']
+            for day, time in days.items():
                 add_event(
                     events,
                     from_time,
                     to_time,
                     template,
                     day,
-                    times['begin'],
-                    times['end'],
+                    time,
                 )
 
 
@@ -159,7 +144,6 @@ def parse_cinecitta(events, from_time, to_time, shows):
                         template,
                         dt.strftime('%Y-%m-%d'),
                         dt.strftime('%H:%M'),
-                        (dt + timedelta(hours=2)).strftime('%H:%M'),
                     )
 
 
@@ -170,16 +154,14 @@ def fetch_events(from_time, to_time):
         parse_events_nuernberg(events, from_time, to_time, untangle.parse(
             'http://meine-veranstaltungen.net/export.php5'
         ))
-    except:
-        # silently ignore failures; maybe cinecitta will succeed
-        pass
+    except Exception as e:
+        print(str(e))
     try:
         parse_cinecitta(events, from_time, to_time, requests.get(
             'https://www.cinecitta.de/common/ajax.php?bereich=portal&modul_id=101&klasse=vorstellungen&cli_mode=1&com=anzeigen_spielplan'
         ).json())
-    except:
-        # silently ignore failures; maybe events succeeded
-        pass
+    except Exception as e:
+        print(str(e))
     # now we need a list to sort the events by time and name
     events = [v for v in events.values()]
     events.sort(key=lambda event: event['begin'] + event['name'])

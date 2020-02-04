@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 
+import html
 import json
-import untangle
 import requests
 import sys
+import untangle
 
 from datetime import datetime, timedelta
+
+
+def matches(a, b):
+    return a.lower().startswith(b.lower()[:8])
 
 
 def add_event(events, from_time, to_time, template, day, begin):
@@ -13,12 +18,14 @@ def add_event(events, from_time, to_time, template, day, begin):
     begin_date = datetime.strptime(begin, '%Y-%m-%d %H:%M')
     if begin_date < from_time or begin_date > to_time:
         return
+    template['name'] = html.unescape(template['name'])
+    template['place'] = html.unescape(template['place'])
     template['begin'] = begin
-    key = begin + template['name']
+    key = begin + template['name'].lower()
     event = events.get(key)
     if event is None:
         events[key] = template.copy()
-    elif event['place'].lower() != template['place'].lower():
+    elif not matches(event['place'], template['place']):
         event['place'] += ', ' + template['place']
 
 
@@ -147,19 +154,108 @@ def parse_cinecitta(events, from_time, to_time, shows):
                     )
 
 
+def parse_kino_de(events, from_time, to_time, html):
+    def extract_cdate_attrib(tag, attrib, text, start):
+        try:
+            start = text.index('<%s ' % (tag, ), start)
+            start = text.index('%s="' % (attrib, ), start)
+            start = text.index('"', start) + 1
+            attrib = text[start:text.index('"', start)]
+            start = text.index('>', start)
+            stop = text.index('<', start)
+            return stop, text[start + 1:stop], attrib
+        except ValueError:
+            return start, "", ""
+
+    def extract_attrib(tag, attrib, text, start):
+        try:
+            start = text.index('<%s ' % (tag, ), start)
+            start = text.index('%s="' % (attrib, ), start)
+            start = text.index('"', start) + 1
+            stop = text.index('"', start)
+            return stop, text[start:stop]
+        except ValueError:
+            return start, "", ""
+
+    def unpack_url(url):
+        return 'https://%s' % (url[2:] if url.startswith('//') else url, )
+
+    # find first theater
+    theater_header = 'class="cinemaprogram-cinema"'
+    i = html.find(theater_header)
+    while i > -1:
+        # find name of theater
+        i, theater, href = extract_cdate_attrib('a', 'href', html, i)
+        # find optional next theater to know where to stop iterating
+        # screenings
+        next_theater = html.find(theater_header, i)
+        # find optional screenings for that theater
+        while i > -1:
+            i = html.find('<li class="cinema-movie bob', i)
+            if i < 0 or (next_theater > -1 and i > next_theater):
+                # those screenings belong to the next theater
+                i = next_theater
+                break
+            i, image_url = extract_attrib('img', 'src', html, i)
+            i, movie, href = extract_cdate_attrib('a', 'href', html, i)
+            # find optional times
+            i = html.find('schedules-container', i)
+            if i < 0:
+                continue
+            template = {
+                'name': movie,
+                'place': theater,
+                'image_url': unpack_url(image_url),
+                'url': unpack_url(href),
+            }
+            # iterate over optional times inside <ol></ol>
+            end_of_list = html.find('</ol>', i)
+            while end_of_list > -1:
+                i = html.find('<time', i)
+                if i < 0 or i > end_of_list:
+                    i = end_of_list
+                    break
+                i, time, date = extract_cdate_attrib('time', 'datetime',
+                    html, i)
+                add_event(
+                    events,
+                    from_time,
+                    to_time,
+                    template,
+                    date.split(' ')[0],
+                    time,
+                )
+        i = next_theater
+
+
 def fetch_events(from_time, to_time):
     # use a dict to be able to merge events
     events = {}
+    # try fetching from meine-veranstaltungen.net
     try:
         parse_events_nuernberg(events, from_time, to_time, untangle.parse(
             'http://meine-veranstaltungen.net/export.php5'
         ))
     except Exception as e:
         print(str(e))
+    # try fetching from cinecitta.de
     try:
         parse_cinecitta(events, from_time, to_time, requests.get(
             'https://www.cinecitta.de/common/ajax.php?bereich=portal&modul_id=101&klasse=vorstellungen&cli_mode=1&com=anzeigen_spielplan'
         ).json())
+    except Exception as e:
+        print(str(e))
+    # try fetching from kino.de
+    try:
+        parse_kino_de(events, from_time, to_time, requests.get(
+            'https://www.kino.de/kinoprogramm/stadt/nuernberg/'
+        ).text)
+        parse_kino_de(events, from_time, to_time, requests.get(
+            'https://www.kino.de/kinoprogramm/stadt/fuerth/'
+        ).text)
+        parse_kino_de(events, from_time, to_time, requests.get(
+            'https://www.kino.de/kinoprogramm/stadt/erlangen/'
+        ).text)
     except Exception as e:
         print(str(e))
     # now we need a list to sort the events by time and name
@@ -204,12 +300,12 @@ src="%s" alt="%s" width="128"/></td>
 <address class="Place">%s</address></td></tr>
 ''' % (
             event['image_url'],
-            event['name'],
+            html.escape(event['name']),
             event['begin'],
             format_date(event['begin'], now),
             event['url'],
-            event['name'],
-            event['place'],
+            html.escape(event['name']),
+            html.escape(event['place']),
         ))
     f.write('''</table>
 <div id="Search"><div id="DaySelector">''')

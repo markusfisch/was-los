@@ -1,11 +1,21 @@
 'use strict'
 
-function filter(table, value) {
-	value = value.toLowerCase()
-	for (let row of table.rows) {
-		row.style.display = row.cells[1].innerText.toLowerCase().indexOf(
-			value
-		) > -1 ? 'table-row' : 'none'
+function filter(table, query) {
+	function indexOf(haystack, needles) {
+		for (let i = 0, l = needles.length; i < l; ++i) {
+			const needle = needles[i]
+			if (haystack.indexOf(needle) < 0) {
+				return false
+			}
+		}
+		return true
+	}
+	const values = query.trim().toLowerCase().split(' ').filter(v => v != '')
+	for (const row of table.rows) {
+		row.style.display = indexOf(
+			row.cells[1].innerText.toLowerCase(),
+			values
+		) ? 'table-row' : 'none'
 	}
 }
 
@@ -21,7 +31,7 @@ if (table && search && query) {
 			clearTimeout(timer)
 		}
 		timer = setTimeout(() => {
-			filter(table, query.value.trim())
+			filter(table, query.value)
 		}, 300)
 	}
 	query.style.display = 'block'

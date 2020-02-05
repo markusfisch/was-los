@@ -292,7 +292,7 @@ def write_html(f, style, events, today, name):
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
 <meta name="msapplication-navbutton-color" content="#111"/>
-<title>Was machen?</title>
+<title>Was machen in Nürnberg, Fürth und Erlangen?</title>
 <link rel="apple-touch-icon-precomposed" href="icon_ios.png"/>
 <link rel="manifest" href="manifest.json"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet"/>

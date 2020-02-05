@@ -282,7 +282,7 @@ def fetch_events(from_time, to_time):
     return events
 
 
-def write_html(f, style, events, now, name):
+def write_html(f, style, events, today, name):
     f.write('''<!doctype html>
 <html>
 <head>
@@ -337,7 +337,7 @@ src="%s" alt="%s" width="128"/></td>
             html.escape(event['place']),
         ))
     f.write('</table><div id="Search"><div id="DayTimes" class="Picker">')
-    current_weekday = now.strftime('%a').lower()
+    current_weekday = today.strftime('%a').lower()
     for hour, label in time_marks.items():
         if name is current_weekday or (name_is_digit and hour >= int(name)):
             href = '#%d' % (hour, )
@@ -369,7 +369,7 @@ src="%s" alt="%s" width="128"/></td>
 ''')
 
 
-def generate_files(events, now):
+def generate_files(events, today):
     def filter_events(events, from_time):
         # let days end at 3'o clock
         to_time = from_time + timedelta(days=1)
@@ -395,10 +395,10 @@ def generate_files(events, now):
         # yield even if chunk is empty so there will be a file for it
         yield '%02d' % (hour, ), filter_events(
             events,
-            datetime(now.year, now.month, now.day, hour),
+            datetime(today.year, today.month, today.day, hour),
         )
     # generate a file for every weekday
-    dt = datetime(now.year, now.month, now.day)
+    dt = datetime(today.year, today.month, today.day)
     for i in range(7):
         # yield even if chunk is empty so there will be a file for it
         yield dt.strftime('%a').lower(), filter_events(events, dt)
@@ -410,11 +410,13 @@ def main(path='.', stylesheet='screen.css'):
     # loaded in time, e.g. on a mobile connection. It's small enough to not
     # add any noticeable weight so that's the better option.
     style = open(stylesheet, 'r').read()
-    now = datetime.now()
-    events = fetch_events(now, now + timedelta(days=6))
-    for file_name, contents in generate_files(events, now):
+    today = datetime.today()
+    # today at 00:00
+    today_start = datetime(today.year, today.month, today.day)
+    events = fetch_events(today_start, today_start + timedelta(days=6))
+    for file_name, contents in generate_files(events, today):
         with open('%s/%s.html' % (path, file_name, ), 'w') as f:
-            write_html(f, style, contents, now, file_name)
+            write_html(f, style, contents, today, file_name)
 
 
 if __name__ == '__main__':

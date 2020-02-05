@@ -13,6 +13,10 @@ def same(a, b):
     return a.lower().startswith(b.lower()[:8])
 
 
+def essence(s):
+    return ''.join(c for c in s.lower() if c.isalpha())
+
+
 def add_event(events, from_time, to_time, template, day, begin):
     begin = day + ' ' + (begin if begin != "" else '00:00')
     begin_date = datetime.strptime(begin, '%Y-%m-%d %H:%M')
@@ -21,7 +25,7 @@ def add_event(events, from_time, to_time, template, day, begin):
     template['name'] = html.unescape(template['name'])
     template['place'] = html.unescape(template['place'])
     template['begin'] = begin
-    key = begin + template['name'].lower()
+    key = begin + essence(template['name'])
     event = events.get(key)
     if event is None:
         events[key] = template.copy()

@@ -10,11 +10,22 @@ from datetime import datetime, timedelta
 
 
 def same(a, b):
+    # let's just assume it's the same place if the first 8 characters
+    # are the same
     return a.lower().startswith(b.lower()[:8])
 
 
 def essence(s):
-    return ''.join(c for c in s.lower() if c.isalpha())
+    # remove all non-alphabetical characters
+    e = ''
+    for c in s.lower():
+        if c.isalpha():
+            e += c
+        elif c != ' ':
+            # break at first character that is not a space to loose
+            # optional subtitles
+            break
+    return e
 
 
 def add_event(events, from_time, to_time, template, day, begin):

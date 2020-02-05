@@ -282,13 +282,6 @@ def fetch_events(from_time, to_time):
     return events
 
 
-def format_date(s, now):
-    today_date = now.strftime('%Y-%m-%d')
-    if today_date in s:
-        return s.replace(today_date, 'Heute')
-    return datetime.strptime(s, '%Y-%m-%d %H:%M').strftime('%H:%M, %e. %b')
-
-
 def write_html(f, style, events, now, name):
     f.write('''<!doctype html>
 <html>
@@ -310,26 +303,53 @@ def write_html(f, style, events, now, name):
 </head>
 <body>''')
     f.write('<table id="EventsTable">')
+    name_is_digit = name.isdigit()
+    time_marks = {
+        12: 'Mittags',
+        19: 'Abends',
+        22: 'Nachts',
+    }
+    time_marks_keys = list(time_marks.keys())
+    mark_index = 0
+    mark = time_marks_keys[mark_index]
     for event in events:
+        dt = datetime.strptime(event['begin'], '%Y-%m-%d %H:%M')
+        if dt.hour >= mark:
+            anchor_tag = 'name="%d" ' % (dt.hour, )
+            mark_index += 1
+            mark = time_marks_keys[mark_index] if mark_index < len(
+                time_marks_keys) else 99
+        else:
+            anchor_tag = ''
         f.write('''<tr><td class="Image"><img
 src="%s" alt="%s" width="128"/></td>
 <td class="Details"><time datetime="%s" class="When">%s</time>
-<a class="Name" href="%s">%s</a>
+<a class="Name" %shref="%s">%s</a>
 <address class="Place">%s</address></td></tr>
 ''' % (
             event['image_url'],
             html.escape(event['name']),
             event['begin'],
-            format_date(event['begin'], now),
+            dt.strftime('Heute %H:%M' if name_is_digit else '%H:%M, %e. %b'),
+            anchor_tag,
             event['url'],
             html.escape(event['name']),
             html.escape(event['place']),
         ))
-    f.write('''</table>
-<div id="Search"><div id="DaySelector">''')
-    if name.isdigit():
-        name = now.strftime('%a').lower()
-    for weekday, label in {
+    f.write('</table><div id="Search"><div id="DayTimes" class="Picker">')
+    current_weekday = now.strftime('%a').lower()
+    for hour, label in time_marks.items():
+        if name is current_weekday or (name_is_digit and hour >= int(name)):
+            href = '#%d' % (hour, )
+        elif name_is_digit:
+            href = '%s.html' % (hour, )
+        else:
+            href = '%s.html#%d' % (name, hour, )
+        f.write('<a href="%s" class="Pick">%s</a>' % (href, label, ))
+    f.write('</div><div class="Picker">''')
+    if name_is_digit:
+        name = current_weekday
+    for filename, label in {
         'mon': 'Mo',
         'tue': 'Di',
         'wed': 'Mi',
@@ -338,9 +358,9 @@ src="%s" alt="%s" width="128"/></td>
         'sat': 'Sa',
         'sun': 'So',
     }.items():
-        f.write('<a href="%s.html" class="Day%s">%s</a>' % (
-            weekday,
-            ' Active' if weekday == name else '',
+        f.write('<a href="%s.html" class="Pick%s">%s</a>' % (
+            filename,
+            ' Active' if filename == name else '',
             label,
         ))
     f.write('''</div><input id="Query" type="text" placeholder="Suche"/></div>

@@ -52,7 +52,7 @@ td.Details {
 }
 
 #Search {
-	margin: 0; padding: 0;
+	margin: 0; padding: 1em 0 0;
 	position: fixed;
 	bottom: 0;
 	width: 100%;
@@ -60,21 +60,20 @@ td.Details {
 	background: rgba(0, 0, 0, .75);
 }
 
-#DaySelector {
+.Picker {
+	padding-bottom: 1em;
 	display: flex;
 	flex-direction: row;
-	padding: 1em 0;
 }
 
-#DaySelector .Day {
-	padding: 0;
+.Picker .Pick {
 	flex-grow: 1;
 	text-align: center;
 	font-size: min(4vw, 110%);
 	border-right: 1px solid #333;
 }
 
-#DaySelector .Day:last-child {
+.Picker .Pick:last-child {
 	border: 0;
 }
 

@@ -17,12 +17,14 @@ function filter(table, query) {
 			values
 		) ? 'table-row' : 'none'
 	}
+	dayTimes.style.display = values.length > 0 ? 'none' : 'flex'
 }
 
 const D = document,
 	table = D.getElementById('EventsTable'),
 	search = D.getElementById('Search'),
-	query = D.getElementById('Query')
+	query = D.getElementById('Query'),
+	dayTimes = D.getElementById('DayTimes')
 
 if (table && search && query) {
 	let timer = null

@@ -9,6 +9,7 @@ install:
 	scp $(GENERATOR) $(SERVER):bin/
 	scp $(HTDOCS)/*.js* $(HTDOCS)/*.png $(HTDOCS)/.htaccess \
 		$(SERVER):html/
+	scp res/screen.css $(SERVER):res/screen.css
 
 format:
 	pep8ify -n -w -f maximum_line_length bin/*.py

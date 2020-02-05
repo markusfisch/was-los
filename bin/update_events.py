@@ -9,12 +9,6 @@ import untangle
 from datetime import datetime, timedelta
 
 
-def same(a, b):
-    # let's just assume it's the same place if the first 8 characters
-    # are the same
-    return a.lower().startswith(b.lower()[:8])
-
-
 def essence(s):
     # remove all non-alphabetical characters
     e = ''
@@ -26,6 +20,15 @@ def essence(s):
             # optional subtitles
             break
     return e
+
+
+def same(places, place):
+    # check if the given place is in the comma separated list of places
+    place_essence = essence(place)
+    for p in map(lambda s : s.lstrip(), places.split(',')):
+        if place_essence == essence(p):
+            return True
+    return False
 
 
 def add_event(events, from_time, to_time, template, day, begin):

@@ -9,7 +9,7 @@ import untangle
 from datetime import datetime, timedelta
 
 
-def matches(a, b):
+def same(a, b):
     return a.lower().startswith(b.lower()[:8])
 
 
@@ -25,7 +25,7 @@ def add_event(events, from_time, to_time, template, day, begin):
     event = events.get(key)
     if event is None:
         events[key] = template.copy()
-    elif not matches(event['place'], template['place']):
+    elif not same(event['place'], template['place']):
         event['place'] += ', ' + template['place']
 
 

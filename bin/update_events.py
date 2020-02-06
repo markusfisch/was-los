@@ -305,6 +305,7 @@ def write_html(f, style, events, today, name):
     f.write('<table id="EventsTable">')
     name_is_digit = name.isdigit()
     time_marks = {
+        9: 'Morgens',
         12: 'Mittags',
         19: 'Abends',
         22: 'Nachts',
@@ -348,7 +349,7 @@ Den Quellcode zu dieser Seite finden Sie
         if name is current_weekday or (name_is_digit and hour >= int(name)):
             href = '#%d' % (hour, )
         elif name_is_digit:
-            href = '%s.html' % (hour, )
+            href = '%02d.html' % (hour, )
         else:
             href = '%s.html#%d' % (name, hour, )
         f.write('<a href="%s" class="Pick">%s</a>' % (href, label, ))

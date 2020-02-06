@@ -336,7 +336,13 @@ src="%s" alt="%s" width="128"/></td>
             html.escape(event['name']),
             html.escape(event['place']),
         ))
-    f.write('</table><div id="Search"><div id="DayTimes" class="Picker">')
+    f.write('''</table>
+<div id="Disclaimer">
+Alle Inhalte sind Eigentum der jeweilig verlinkten Quelle.
+Den Quellcode zu dieser Seite finden Sie
+<a href="https://github.com/markusfisch/was-machen">hier</a>.
+</div>
+<div id="Search"><div id="DayTimes" class="Picker">''')
     current_weekday = today.strftime('%a').lower()
     for hour, label in time_marks.items():
         if name is current_weekday or (name_is_digit and hour >= int(name)):

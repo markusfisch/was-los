@@ -78,7 +78,7 @@ td.Details {
 }
 
 .Active {
-	color: #333;
+	color: #555;
 }
 
 #Query {
@@ -91,4 +91,17 @@ td.Details {
 	font-family: 'Roboto Mono', Menlo, monospace;
 	font-size: 110%;
 	line-height: 150%;
+}
+
+#Disclaimer {
+	padding: 2em;
+	font-size: 80%;
+	color: #555;
+	text-align: center;
+	line-height: 150%;
+}
+
+#Disclaimer a {
+	color: #555;
+	text-decoration: underline;
 }

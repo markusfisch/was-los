@@ -47,7 +47,7 @@ def add_event(events, from_time, to_time, template, day, begin):
         event['place'] += ', ' + template['place']
 
 
-def parse_meine_veranstaltungen(events, from_time, to_time, xml):
+def fetch_meine_veranstaltungen(events, from_time, to_time, uri):
     def collect_days(begin, end, weekday):
         # map german weekday abbreviations to datetime.weekday()
         if weekday == 'mo':
@@ -76,7 +76,7 @@ def parse_meine_veranstaltungen(events, from_time, to_time, xml):
         return days
 
     # see https://meineveranstaltungen.nuernberg.de/Export_Schnittstelle.pdf
-    for event in xml.ERGEBNIS.VERANSTALTUNG:
+    for event in untangle.parse(uri).ERGEBNIS.VERANSTALTUNG:
         elements_in_event = dir(event)
         template = {
             'name': event.TITEL.cdata,
@@ -139,7 +139,8 @@ def parse_meine_veranstaltungen(events, from_time, to_time, xml):
                 )
 
 
-def parse_curt(events, from_time, to_time, html):
+def fetch_curt(events, from_time, to_time, uri):
+    html = requests.get(uri).text
     start = html.find('<div id="eventlist"')
     if start < 0:
         return {}
@@ -188,7 +189,8 @@ def parse_curt(events, from_time, to_time, html):
         )
 
 
-def parse_cinecitta(events, from_time, to_time, shows):
+def fetch_cinecitta(events, from_time, to_time, uri):
+    shows = requests.get(uri).json()
     for item in shows['daten']['items']:
         template = {
             'name': item['film_titel'],
@@ -214,7 +216,7 @@ def parse_cinecitta(events, from_time, to_time, shows):
                     )
 
 
-def parse_kino(events, from_time, to_time, html):
+def fetch_kino(events, from_time, to_time, uri):
     def extract_cdate_attrib(tag, attrib, text, start):
         try:
             start = text.index('<%s ' % (tag, ), start)
@@ -240,6 +242,7 @@ def parse_kino(events, from_time, to_time, html):
     def unpack_url(url):
         return 'https://%s' % (url[2:] if url.startswith('//') else url, )
 
+    html = requests.get(uri).text
     # find first theater
     theater_header = 'class="cinemaprogram-cinema"'
     i = html.find(theater_header)
@@ -291,43 +294,22 @@ def parse_kino(events, from_time, to_time, html):
 def fetch_events(from_time, to_time):
     # use a dict to be able to merge events
     events = {}
-    # try all sources separately to allow some to fail
-    try:
-        parse_meine_veranstaltungen(events, from_time, to_time, untangle.parse(
-            'http://meine-veranstaltungen.net/export.php5'
-        ))
-    except Exception as e:
-        print(str(e))
-    try:
-        parse_curt(events, from_time, to_time, requests.get(
-            'https://www.curt.de/nbg/termine/'
-        ).text)
-    except Exception as e:
-        print(str(e))
-    try:
-        parse_cinecitta(events, from_time, to_time, requests.get(
-            'https://www.cinecitta.de/common/ajax.php?bereich=portal&modul_id=101&klasse=vorstellungen&cli_mode=1&com=anzeigen_spielplan'
-        ).json())
-    except Exception as e:
-        print(str(e))
-    try:
-        parse_kino(events, from_time, to_time, requests.get(
-            'https://www.kino.de/kinoprogramm/stadt/nuernberg/'
-        ).text)
-    except Exception as e:
-        print(str(e))
-    try:
-        parse_kino(events, from_time, to_time, requests.get(
-            'https://www.kino.de/kinoprogramm/stadt/fuerth/'
-        ).text)
-    except Exception as e:
-        print(str(e))
-    try:
-        parse_kino(events, from_time, to_time, requests.get(
-            'https://www.kino.de/kinoprogramm/stadt/erlangen/'
-        ).text)
-    except Exception as e:
-        print(str(e))
+    for f, uri in {
+        fetch_meine_veranstaltungen:
+                'http://meine-veranstaltungen.net/export.php5',
+        fetch_curt: 'https://www.curt.de/nbg/termine/',
+        fetch_cinecitta: 'https://www.cinecitta.de/common/ajax.php?' +
+                'bereich=portal&modul_id=101&klasse=vorstellungen&' +
+                'cli_mode=1&com=anzeigen_spielplan',
+        fetch_kino: 'https://www.kino.de/kinoprogramm/stadt/nuernberg/',
+        fetch_kino: 'https://www.kino.de/kinoprogramm/stadt/fuerth/',
+        fetch_kino: 'https://www.kino.de/kinoprogramm/stadt/erlangen/',
+    }.items():
+        # try all sources separately to allow failures
+        try:
+            f(events, from_time, to_time, uri)
+        except Exception as e:
+            print(str(e))
     # now we need a list to sort the events by time and name
     events = [v for v in events.values()]
     events.sort(key=lambda event: event['begin'] + event['name'])

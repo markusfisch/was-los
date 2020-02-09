@@ -301,8 +301,8 @@ def write_html(f, style, events, today, name):
     f.write('''</style>
 <script defer src="search.js"></script>
 </head>
-<body>''')
-    f.write('<table id="EventsTable">')
+<body>
+<div id="Search"><div id="DayTimes" class="Picker">''')
     name_is_digit = name.isdigit()
     time_marks = {
         9: 'Morgens',
@@ -310,6 +310,34 @@ def write_html(f, style, events, today, name):
         19: 'Abends',
         22: 'Nachts',
     }
+    current_weekday = today.strftime('%a').lower()
+    for hour, label in time_marks.items():
+        if name is current_weekday or (name_is_digit and hour >= int(name)):
+            href = '#%d' % (hour, )
+        elif name_is_digit:
+            href = '%02d.html' % (hour, )
+        else:
+            href = '%s.html#%d' % (name, hour, )
+        f.write('<a href="%s" class="Pick">%s</a>' % (href, label, ))
+    f.write('</div><div class="Picker">''')
+    if name_is_digit:
+        name = current_weekday
+    for filename, label in {
+        'mon': 'Mo',
+        'tue': 'Di',
+        'wed': 'Mi',
+        'thu': 'Do',
+        'fri': 'Fr',
+        'sat': 'Sa',
+        'sun': 'So',
+    }.items():
+        f.write('<a href="%s.html" class="Pick%s">%s</a>' % (
+            filename,
+            ' Active' if filename == name else '',
+            label,
+        ))
+    f.write('''</div><input id="Query" type="text" placeholder="Suche"/></div>
+<table id="EventsTable">''')
     time_marks_keys = list(time_marks.keys())
     mark_index = 0
     mark = time_marks_keys[mark_index]
@@ -343,34 +371,6 @@ Alle Inhalte sind Eigentum der jeweilig verlinkten Quelle.
 Den Quellcode zu dieser Seite finden Sie
 <a href="https://github.com/markusfisch/was-machen">hier</a>.
 </div>
-<div id="Search"><div id="DayTimes" class="Picker">''')
-    current_weekday = today.strftime('%a').lower()
-    for hour, label in time_marks.items():
-        if name is current_weekday or (name_is_digit and hour >= int(name)):
-            href = '#%d' % (hour, )
-        elif name_is_digit:
-            href = '%02d.html' % (hour, )
-        else:
-            href = '%s.html#%d' % (name, hour, )
-        f.write('<a href="%s" class="Pick">%s</a>' % (href, label, ))
-    f.write('</div><div class="Picker">''')
-    if name_is_digit:
-        name = current_weekday
-    for filename, label in {
-        'mon': 'Mo',
-        'tue': 'Di',
-        'wed': 'Mi',
-        'thu': 'Do',
-        'fri': 'Fr',
-        'sat': 'Sa',
-        'sun': 'So',
-    }.items():
-        f.write('<a href="%s.html" class="Pick%s">%s</a>' % (
-            filename,
-            ' Active' if filename == name else '',
-            label,
-        ))
-    f.write('''</div><input id="Query" type="text" placeholder="Suche"/></div>
 </body>
 </html>
 ''')

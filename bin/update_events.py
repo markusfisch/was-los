@@ -47,7 +47,7 @@ def add_event(events, from_time, to_time, template, day, begin):
         event['place'] += ', ' + template['place']
 
 
-def parse_events_nuernberg(events, from_time, to_time, xml):
+def parse_meine_veranstaltungen(events, from_time, to_time, xml):
     def collect_days(begin, end, weekday):
         # map german weekday abbreviations to datetime.weekday()
         if weekday == 'mo':
@@ -75,13 +75,6 @@ def parse_events_nuernberg(events, from_time, to_time, xml):
             dt += timedelta(days=1)
         return days
 
-    #       .-"-.
-    #     _/_-.-_\_
-    #    / __} {__ \
-    #   / //  "  \\ \
-    #  / / \'---'/ \ \
-    #  \ \_/`"""`\_/ /
-    #   \           /
     # see https://meineveranstaltungen.nuernberg.de/Export_Schnittstelle.pdf
     for event in xml.ERGEBNIS.VERANSTALTUNG:
         elements_in_event = dir(event)
@@ -146,6 +139,55 @@ def parse_events_nuernberg(events, from_time, to_time, xml):
                 )
 
 
+def parse_curt(events, from_time, to_time, html):
+    start = html.find('<div id="eventlist"')
+    if start < 0:
+        return {}
+    current_year = datetime.today().year
+    while True:
+        start = html.find('<div class="event"', start)
+        if start < 0:
+            break
+        # find time
+        start = html.index('<div class="time">', start)
+        stop = html.index('</', start)
+        time = html[html.index('>', start) + 1:stop].replace('.', ':')
+        # find date
+        start = html.index('<div class="dat">', start)
+        stop = html.index('</', start)
+        date = datetime.strptime(
+            html[html.index('>', start) + 1:stop],
+            '%d.%m.'
+        ).replace(year=current_year).strftime('%Y-%m-%d')
+        # find place
+        start = html.index('<a class="loc"', start)
+        stop = html.index('</', start)
+        place = html[html.index('>', start) + 1:stop]
+        # find url
+        start = html.index('<div class="titel">', start)
+        start = html.index(' href=', start)
+        start = html.index('"', start) + 1
+        url = html[start:html.index('"', start)]
+        # find name
+        stop = html.index('</', start)
+        name = html[html.index('>', start) + 1:stop]
+        # add event
+        template = {
+            'name': name,
+            'image_url': 'https://www.curt.de/nbg/templates/css/icon_logo.svg',
+            'url': url,
+            'place': place,
+        }
+        add_event(
+            events,
+            from_time,
+            to_time,
+            template,
+            date,
+            time,
+        )
+
+
 def parse_cinecitta(events, from_time, to_time, shows):
     for item in shows['daten']['items']:
         template = {
@@ -172,7 +214,7 @@ def parse_cinecitta(events, from_time, to_time, shows):
                     )
 
 
-def parse_kino_de(events, from_time, to_time, html):
+def parse_kino(events, from_time, to_time, html):
     def extract_cdate_attrib(tag, attrib, text, start):
         try:
             start = text.index('<%s ' % (tag, ), start)
@@ -249,29 +291,39 @@ def parse_kino_de(events, from_time, to_time, html):
 def fetch_events(from_time, to_time):
     # use a dict to be able to merge events
     events = {}
-    # try fetching from meine-veranstaltungen.net
+    # try all sources separately to allow some to fail
     try:
-        parse_events_nuernberg(events, from_time, to_time, untangle.parse(
+        parse_meine_veranstaltungen(events, from_time, to_time, untangle.parse(
             'http://meine-veranstaltungen.net/export.php5'
         ))
     except Exception as e:
         print(str(e))
-    # try fetching from cinecitta.de
+    try:
+        parse_curt(events, from_time, to_time, requests.get(
+            'https://www.curt.de/nbg/termine/'
+        ).text)
+    except Exception as e:
+        print(str(e))
     try:
         parse_cinecitta(events, from_time, to_time, requests.get(
             'https://www.cinecitta.de/common/ajax.php?bereich=portal&modul_id=101&klasse=vorstellungen&cli_mode=1&com=anzeigen_spielplan'
         ).json())
     except Exception as e:
         print(str(e))
-    # try fetching from kino.de
     try:
-        parse_kino_de(events, from_time, to_time, requests.get(
+        parse_kino(events, from_time, to_time, requests.get(
             'https://www.kino.de/kinoprogramm/stadt/nuernberg/'
         ).text)
-        parse_kino_de(events, from_time, to_time, requests.get(
+    except Exception as e:
+        print(str(e))
+    try:
+        parse_kino(events, from_time, to_time, requests.get(
             'https://www.kino.de/kinoprogramm/stadt/fuerth/'
         ).text)
-        parse_kino_de(events, from_time, to_time, requests.get(
+    except Exception as e:
+        print(str(e))
+    try:
+        parse_kino(events, from_time, to_time, requests.get(
             'https://www.kino.de/kinoprogramm/stadt/erlangen/'
         ).text)
     except Exception as e:

@@ -46,6 +46,7 @@ Now, you just need to put `htdocs` on a web server.
 Currently aggregates events and movie screenings from:
 
 * [Veranstaltungskalender für Nürnberg, Fürth, Erlangen und Schwabach](https://meineveranstaltungen.nuernberg.de)
+* [curt.de](https://www.curt.de/nbg/)
 * [Kino.de](https://www.kino.de/)
 * [Cinecitta Nürnberg](https://www.cinecitta.de/)
 

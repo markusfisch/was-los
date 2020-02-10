@@ -140,12 +140,10 @@ def fetch_meine_veranstaltungen(events, from_time, to_time, uri):
 
 
 def fetch_curt(events, from_time, to_time, uri):
+    current_year = datetime.today().year
     html = requests.get(uri).text
     start = html.find('<div id="eventlist"')
-    if start < 0:
-        return {}
-    current_year = datetime.today().year
-    while True:
+    while start > -1:
         start = html.find('<div class="event"', start)
         if start < 0:
             break

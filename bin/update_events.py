@@ -85,6 +85,7 @@ def fetch_meine_veranstaltungen(events, from_time, to_time, uri):
                 'BILD' in elements_in_event else '#',
             'url': event.DETAILLINK.cdata if
                 'DETAILLINK' in elements_in_event else '#',
+            'source': 'mwz',
         }
         # add an event for all opening hours
         hours = event.OEFFNUNGSZEITEN
@@ -176,6 +177,7 @@ def fetch_curt(events, from_time, to_time, uri):
             'image_url': 'https://www.curt.de/nbg/templates/css/icon_logo.svg',
             'url': url,
             'place': place,
+            'source': 'curt',
         }
         add_event(
             events,
@@ -194,6 +196,7 @@ def fetch_cinecitta(events, from_time, to_time, uri):
             'name': item['film_titel'],
             'image_url': item['film_cover_src'],
             'url': 'https://www.cinecitta.de/' + item['filminfo_href'],
+            'source': 'cinecitta',
         }
         for theater in item['theater']:
             for screen in theater['leinwaende']:
@@ -268,6 +271,7 @@ def fetch_kino(events, from_time, to_time, uri):
                 'place': theater,
                 'image_url': unpack_url(image_url),
                 'url': unpack_url(href),
+                'source': 'kino',
             }
             # iterate over optional times inside <ol></ol>
             end_of_list = html.find('</ol>', i)
@@ -385,13 +389,15 @@ def write_html(f, style, events, today, name):
         f.write('''<tr><td class="Image"><img
 src="%s" alt="%s" width="128"/></td>
 <td class="Details"><time datetime="%s" class="When">%s</time>
-<a class="Name" %shref="%s">%s</a>
+<span class="Source">#%s</span><br/>
+<a class="Name" %shref="%s">%s</a><br/>
 <address class="Place">%s</address></td></tr>
 ''' % (
             event['image_url'],
             html.escape(event['name']),
             event['begin'],
             dt.strftime('Heute %H:%M' if name_is_digit else '%H:%M, %e. %b'),
+            event['source'],
             anchor_tag,
             event['url'],
             html.escape(event['name']),

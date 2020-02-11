@@ -241,7 +241,13 @@ def fetch_kino(events, from_time, to_time, uri):
             return start, "", ""
 
     def unpack_url(url):
-        return 'https://%s' % (url[2:] if url.startswith('//') else url, )
+        if url.startswith('//'):
+            url = url[2:]
+        if url.startswith('http://'):
+            return url
+        if url.startswith('https://'):
+            return url
+        return 'https://' + url
 
     html = requests.get(uri).text
     # find first theater

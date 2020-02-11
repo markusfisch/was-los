@@ -296,20 +296,20 @@ def fetch_kino(events, from_time, to_time, uri):
 def fetch_events(from_time, to_time):
     # use a dict to be able to merge events
     events = {}
-    for f, uri in {
-        fetch_meine_veranstaltungen:
-                'http://meine-veranstaltungen.net/export.php5',
-        fetch_curt: 'https://www.curt.de/nbg/termine/',
-        fetch_cinecitta: 'https://www.cinecitta.de/common/ajax.php?' +
+    for source in [
+        (fetch_meine_veranstaltungen,
+                'http://meine-veranstaltungen.net/export.php5'),
+        (fetch_curt, 'https://www.curt.de/nbg/termine/'),
+        (fetch_cinecitta, 'https://www.cinecitta.de/common/ajax.php?' +
                 'bereich=portal&modul_id=101&klasse=vorstellungen&' +
-                'cli_mode=1&com=anzeigen_spielplan',
-        fetch_kino: 'https://www.kino.de/kinoprogramm/stadt/nuernberg/',
-        fetch_kino: 'https://www.kino.de/kinoprogramm/stadt/fuerth/',
-        fetch_kino: 'https://www.kino.de/kinoprogramm/stadt/erlangen/',
-    }.items():
+                'cli_mode=1&com=anzeigen_spielplan'),
+        (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/nuernberg/'),
+        (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/fuerth/'),
+        (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/erlangen/'),
+    ]:
         # try all sources separately to allow failures
         try:
-            f(events, from_time, to_time, uri)
+            source[0](events, from_time, to_time, source[1])
         except Exception as e:
             print(str(e))
     # now we need a list to sort the events by time and name

@@ -4,9 +4,9 @@ import html
 import json
 import requests
 import sys
-import untangle
 
 from datetime import datetime, timedelta
+from lxml import etree, html as lxmlhtml
 
 
 def essence(s):
@@ -75,118 +75,107 @@ def fetch_meine_veranstaltungen(events, from_time, to_time, uri):
             dt += timedelta(days=1)
         return days
 
+    def first_or(l, preset):
+        return l[0] if l else preset
+
+    tree = etree.fromstring(requests.get(uri).content)
     # see https://meineveranstaltungen.nuernberg.de/Export_Schnittstelle.pdf
-    for event in untangle.parse(uri).ERGEBNIS.VERANSTALTUNG:
-        elements_in_event = dir(event)
-        template = {
-            'name': event.TITEL.cdata,
-            'place': event.ORT.cdata,
-            'image_url': event.BILD.cdata if
-                'BILD' in elements_in_event else '#',
-            'url': event.DETAILLINK.cdata if
-                'DETAILLINK' in elements_in_event else '#',
-            'source': 'mwz',
-        }
-        # add an event for all opening hours
-        hours = event.OEFFNUNGSZEITEN
-        elements_in_hours = dir(hours)
-        t = hours['TYP']
-        if t == '1':
-            d = hours.DATUM
+    for event in tree.xpath('//ERGEBNIS/VERANSTALTUNG'):
+        try:
+            template = {
+                'name': event.xpath('TITEL/text()')[0],
+                'place': event.xpath('ORT/text()')[0],
+                'image_url': first_or(event.xpath('BILD/text()'), '#'),
+                'url': first_or(event.xpath('DETAILLINK/text()'), '#'),
+                'source': 'mwz',
+            }
+            hour = event.xpath('OEFFNUNGSZEITEN')[0]
+            t = hour.attrib['TYP']
+            if t == '1':
+                date = hour.xpath('DATUM')[0]
+                add_event(
+                    events,
+                    from_time,
+                    to_time,
+                    template,
+                    date.text,
+                    date.attrib['BEGINN'],
+                )
+            elif t == '2':
+                for date in hour.xpath('DATUM'):
+                    add_event(
+                        events,
+                        from_time,
+                        to_time,
+                        template,
+                        date.text,
+                        date.attrib['BEGINN'],
+                    )
+            elif t == '3':
+                days = {}
+                # add all weekdays between DATUM1 and DATUM2
+                begin = hour.xpath('DATUM1')[0].text
+                end = hour.xpath('DATUM2')[0].text
+                for open_day in hour.xpath('OFFENETAGE/OFFENERTAG'):
+                    for day in collect_days(begin, end, open_day.text):
+                        days[day] = open_day.attrib['BEGINN']
+                # remove exceptions
+                exceptions = hour.xpath('AUSNAHMEN/text()')
+                if len(exceptions) > 0:
+                    for day in filter(None, exceptions[0].split(';')):
+                        days.pop(day, None)
+                # overwrite with deviating days
+                for dev_day in hour.xpath('ABWEICHENDETAGE/ABWEICHENDERTAG'):
+                    days[dev_day.text] = dev_day.attrib['BEGINN']
+                for day, time in days.items():
+                    add_event(
+                        events,
+                        from_time,
+                        to_time,
+                        template,
+                        day,
+                        time,
+                    )
+        except IndexError:
+            pass
+
+
+def fetch_curt(events, from_time, to_time, uri):
+    current_year = datetime.today().year
+    tree = lxmlhtml.fromstring(requests.get(uri).content)
+    for eventlist in tree.xpath('//div[@id="eventlist"]'):
+        for event in eventlist.xpath(
+            'div[@class="content"]/div[@class="event"]'):
+            times = event.xpath('div/div/div[@class="time"]')
+            dates = event.xpath('div/div/div[@class="dat"]')
+            places = event.xpath('div/div/a[@class="loc"]')
+            titles = event.xpath('div/div/div[@class="titel"]/a')
+            if (len(times) < 1 or
+                len(dates) < 1 or
+                len(places) < 1 or
+                len(titles) < 1):
+                continue
+            template = {
+                'name': titles[0].text,
+                'image_url':
+                    'https://www.curt.de/nbg/templates/css/icon_logo.svg',
+                'url': titles[0].attrib['href'],
+                'place': places[0].text,
+                'source': 'curt',
+            }
+            date = datetime.strptime(
+                dates[0].text,
+                '%d.%m.'
+            ).replace(year=current_year).strftime('%Y-%m-%d')
+            time = times[0].text.replace('.', ':')
             add_event(
                 events,
                 from_time,
                 to_time,
                 template,
-                d.cdata,
-                d['BEGINN'],
+                date,
+                time,
             )
-        elif t == '2' or 'DATUM' in elements_in_hours:
-            for d in hours.DATUM:
-                add_event(
-                    events,
-                    from_time,
-                    to_time,
-                    template,
-                    d.cdata,
-                    d['BEGINN'],
-                )
-        elif t == '3' or 'OFFENETAGE' in elements_in_hours:
-            days = {}
-            # add all weekdays between DATUM1 and DATUM2
-            begin = hours.DATUM1.cdata
-            end = hours.DATUM2.cdata
-            if 'OFFENETAGE' in elements_in_hours:
-                for d in hours.OFFENETAGE.OFFENERTAG:
-                    for day in collect_days(begin, end, d.cdata):
-                        days[day] = d['BEGINN']
-            # remove exceptions
-            if 'AUSNAHMEN' in elements_in_hours:
-                for day in filter(None, hours.AUSNAHMEN.cdata.split(';')):
-                    days.pop(day, None)
-            # overwrite with deviating days
-            if ('ABWEICHENDETAGE' in elements_in_hours and
-                'ABWEICHENDERTAG' in dir(hours.ABWEICHENDETAGE)):
-                for d in hours.ABWEICHENDETAGE.ABWEICHENDERTAG:
-                    days[d.cdata] = d['BEGINN']
-            for day, time in days.items():
-                add_event(
-                    events,
-                    from_time,
-                    to_time,
-                    template,
-                    day,
-                    time,
-                )
-
-
-def fetch_curt(events, from_time, to_time, uri):
-    current_year = datetime.today().year
-    html = requests.get(uri).text
-    start = html.find('<div id="eventlist"')
-    while start > -1:
-        start = html.find('<div class="event"', start)
-        if start < 0:
-            break
-        # find time
-        start = html.index('<div class="time">', start)
-        stop = html.index('</', start)
-        time = html[html.index('>', start) + 1:stop].replace('.', ':')
-        # find date
-        start = html.index('<div class="dat">', start)
-        stop = html.index('</', start)
-        date = datetime.strptime(
-            html[html.index('>', start) + 1:stop],
-            '%d.%m.'
-        ).replace(year=current_year).strftime('%Y-%m-%d')
-        # find place
-        start = html.index('<a class="loc"', start)
-        stop = html.index('</', start)
-        place = html[html.index('>', start) + 1:stop]
-        # find url
-        start = html.index('<div class="titel">', start)
-        start = html.index(' href=', start)
-        start = html.index('"', start) + 1
-        url = html[start:html.index('"', start)]
-        # find name
-        stop = html.index('</', start)
-        name = html[html.index('>', start) + 1:stop]
-        # add event
-        template = {
-            'name': name,
-            'image_url': 'https://www.curt.de/nbg/templates/css/icon_logo.svg',
-            'url': url,
-            'place': place,
-            'source': 'curt',
-        }
-        add_event(
-            events,
-            from_time,
-            to_time,
-            template,
-            date,
-            time,
-        )
 
 
 def fetch_cinecitta(events, from_time, to_time, uri):
@@ -218,28 +207,6 @@ def fetch_cinecitta(events, from_time, to_time, uri):
 
 
 def fetch_kino(events, from_time, to_time, uri):
-    def extract_cdate_attrib(tag, attrib, text, start):
-        try:
-            start = text.index('<%s ' % (tag, ), start)
-            start = text.index('%s="' % (attrib, ), start)
-            start = text.index('"', start) + 1
-            attrib = text[start:text.index('"', start)]
-            start = text.index('>', start)
-            stop = text.index('<', start)
-            return stop, text[start + 1:stop], attrib
-        except ValueError:
-            return start, "", ""
-
-    def extract_attrib(tag, attrib, text, start):
-        try:
-            start = text.index('<%s ' % (tag, ), start)
-            start = text.index('%s="' % (attrib, ), start)
-            start = text.index('"', start) + 1
-            stop = text.index('"', start)
-            return stop, text[start:stop]
-        except ValueError:
-            return start, "", ""
-
     def unpack_url(url):
         if url.startswith('//'):
             url = url[2:]
@@ -249,54 +216,48 @@ def fetch_kino(events, from_time, to_time, uri):
             return url
         return 'https://' + url
 
-    html = requests.get(uri).text
-    # find first theater
-    theater_header = 'class="cinemaprogram-cinema"'
-    i = html.find(theater_header)
-    while i > -1:
-        # find name of theater
-        i, theater, href = extract_cdate_attrib('a', 'href', html, i)
-        # find optional next theater to know where to stop iterating
-        # screenings
-        next_theater = html.find(theater_header, i)
-        # find optional screenings for that theater
-        while i > -1:
-            i = html.find('<li class="cinema-movie bob', i)
-            if i < 0 or (next_theater > -1 and i > next_theater):
-                # those screenings belong to the next theater
-                i = next_theater
-                break
-            i, image_url = extract_attrib('img', 'src', html, i)
-            i, movie, href = extract_cdate_attrib('a', 'href', html, i)
-            # find optional times
-            i = html.find('schedules-container', i)
-            if i < 0:
+    lazy_attrib = 'data-pagespeed-lazy-src'
+    tree = lxmlhtml.fromstring(requests.get(uri).content)
+    for theater in tree.xpath('//li[@class="cinemaprogram-cinema"]'):
+        names = theater.xpath('div[@class="cinemaprogram-meta"]/h3/a')
+        if len(names) < 1:
+            continue
+        theater_name = names[0].text
+        for movie in theater.xpath(
+            'div[@class="cinema-movies-container"]/ul/li'
+        ):
+            posters = movie.xpath('article/div[@class="card-media"]/img')
+            if len(posters) < 1:
                 continue
+            movie_poster = (posters[0].attrib[lazy_attrib] if
+                lazy_attrib in posters[0].attrib else posters[0].attrib['src'])
+            titles = movie.xpath('article/div[@class="card-body"]/h3/a')
+            if len(titles) < 1:
+                continue
+            movie_url = titles[0].attrib['href']
+            movie_name = titles[0].text
             template = {
-                'name': movie,
-                'place': theater,
-                'image_url': unpack_url(image_url),
-                'url': unpack_url(href),
+                'name': movie_name,
+                'place': theater_name,
+                'image_url': unpack_url(movie_poster),
+                'url': unpack_url(movie_url),
                 'source': 'kino',
             }
-            # iterate over optional times inside <ol></ol>
-            end_of_list = html.find('</ol>', i)
-            while end_of_list > -1:
-                i = html.find('<time', i)
-                if i < 0 or i > end_of_list:
-                    i = end_of_list
-                    break
-                i, time, date = extract_cdate_attrib('time', 'datetime',
-                    html, i)
+            showings = movie.xpath('ol/li/a/time')
+            if len(showings) < 1:
+                continue
+            for showing in showings:
+                datetime = showing.attrib['datetime'].split(' ')
+                if len(datetime) < 2:
+                    continue
                 add_event(
                     events,
                     from_time,
                     to_time,
                     template,
-                    date.split(' ')[0],
-                    time,
+                    datetime[0],
+                    datetime[1],
                 )
-        i = next_theater
 
 
 def fetch_events(from_time, to_time):

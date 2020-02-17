@@ -22,7 +22,7 @@ as possible, even on a bad connection.
 
 The following packages need to be installed to generate the static HTML pages:
 
-	$ pip3 install untangle requests
+	$ pip3 install lxml requests
 
 ## Generation
 

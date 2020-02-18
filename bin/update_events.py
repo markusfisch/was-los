@@ -15,7 +15,7 @@ def essence(s):
     for c in s.lower():
         if c.isalpha():
             e += c
-        elif c != ' ':
+        elif not c.isspace():
             # break at first character that is not a space to loose
             # optional subtitles
             break

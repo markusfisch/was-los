@@ -2,13 +2,18 @@
 
 function filter(table, query) {
 	function indexOf(haystack, needles) {
+		let visible = true
 		for (let i = 0, l = needles.length; i < l; ++i) {
 			const needle = needles[i]
-			if (haystack.indexOf(needle) < 0) {
-				return false
+			if (needle[0] == '!') {
+				if (visible && needle.length > 1) {
+					visible = haystack.indexOf(needle.substr(1)) < 0
+				}
+			} else if (visible && haystack.indexOf(needle) < 0) {
+				visible = false
 			}
 		}
-		return true
+		return visible
 	}
 	const values = query.trim().toLowerCase().split(' ').filter(v => v != '')
 	for (const row of table.rows) {

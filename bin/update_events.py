@@ -339,7 +339,8 @@ def write_html(f, style, events, today, name):
             ' Active' if filename == name else '',
             label,
         ))
-    f.write('''</div><input id="Query" type="text" placeholder="Suche"/></div>
+    f.write('''</div><input id="Query" type="text"
+placeholder="Suche nach X, nicht nach !Y"/></div>
 <table id="EventsTable">''')
     time_marks_keys = list(time_marks.keys())
     mark_index = 0

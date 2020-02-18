@@ -145,7 +145,7 @@ def fetch_curt(events, from_time, to_time, uri):
     tree = lxmlhtml.fromstring(requests.get(uri).content)
     for eventlist in tree.xpath('//div[@id="eventlist"]'):
         for event in eventlist.xpath(
-            'div[@class="content"]/div[@class="event"]'):
+                'div[@class="content"]/div[@class="event"]'):
             times = event.xpath('div/div/div[@class="time"]')
             dates = event.xpath('div/div/div[@class="dat"]')
             places = event.xpath('div/div/a[@class="loc"]')

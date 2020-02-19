@@ -340,7 +340,7 @@ def write_html(f, style, events, today, name):
             label,
         ))
     f.write('''</div><input id="Query" type="text"
-placeholder="Suche nach X, nicht nach !Y"/></div>
+placeholder="Suche nach X ohne !Y"/></div>
 <table id="EventsTable">''')
     time_marks_keys = list(time_marks.keys())
     mark_index = 0

@@ -365,7 +365,7 @@ src="%s" alt="%s" width="128"/></td>
             html.escape(event['name']),
             event['begin'],
             dt.strftime('Heute %H:%M' if name_is_digit else '%H:%M, %e. %b'),
-            event['source'],
+            html.escape(event['source']),
             anchor_tag,
             event['url'],
             html.escape(event['name']),

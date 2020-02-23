@@ -43,8 +43,11 @@ def add_event(events, from_time, to_time, template, day, begin):
     event = events.get(key)
     if event is None:
         events[key] = template.copy()
-    elif not same(event['place'], template['place']):
-        event['place'] += ', ' + template['place']
+    else:
+        if template['source'] not in event['source']:
+            event['source'] += ' ' + template['source']
+        if not same(event['place'], template['place']):
+            event['place'] += ', ' + template['place']
 
 
 def fetch_meine_veranstaltungen(events, from_time, to_time, uri):
@@ -87,7 +90,7 @@ def fetch_meine_veranstaltungen(events, from_time, to_time, uri):
                 'place': event.xpath('ORT/text()')[0],
                 'image_url': first_or(event.xpath('BILD/text()'), '#'),
                 'url': first_or(event.xpath('DETAILLINK/text()'), '#'),
-                'source': 'mwz',
+                'source': '#mwz',
             }
             hour = event.xpath('OEFFNUNGSZEITEN')[0]
             t = hour.attrib['TYP']
@@ -161,7 +164,7 @@ def fetch_curt(events, from_time, to_time, uri):
                     'https://www.curt.de/nbg/templates/css/icon_logo.svg',
                 'url': titles[0].attrib['href'],
                 'place': places[0].text,
-                'source': 'curt',
+                'source': '#curt',
             }
             date = datetime.strptime(
                 dates[0].text,
@@ -185,7 +188,7 @@ def fetch_cinecitta(events, from_time, to_time, uri):
             'name': item['film_titel'],
             'image_url': item['film_cover_src'],
             'url': 'https://www.cinecitta.de/' + item['filminfo_href'],
-            'source': 'cinecitta',
+            'source': '#cinecitta',
         }
         for theater in item['theater']:
             for screen in theater['leinwaende']:
@@ -241,7 +244,7 @@ def fetch_kino(events, from_time, to_time, uri):
                 'place': theater_name,
                 'image_url': unpack_url(movie_poster),
                 'url': unpack_url(movie_url),
-                'source': 'kino',
+                'source': '#kino',
             }
             showings = movie.xpath('ol/li/a/time')
             if len(showings) < 1:
@@ -357,7 +360,7 @@ placeholder="Suche nach X ohne !Y"/></div>
         f.write('''<tr><td class="Image"><img
 src="%s" alt="%s" width="128"/></td>
 <td class="Details"><time datetime="%s" class="When">%s</time>
-<span class="Source">#%s</span><br/>
+<span class="Source">%s</span><br/>
 <a class="Name" %shref="%s">%s</a><br/>
 <address class="Place">%s</address></td></tr>
 ''' % (

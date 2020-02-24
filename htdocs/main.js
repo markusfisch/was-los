@@ -44,3 +44,20 @@ if (table && search && query) {
 	query.style.display = 'block'
 	query.focus()
 }
+
+if ('serviceWorker' in navigator) {
+	navigator.serviceWorker.register('service-worker.js')
+	const installNote = D.getElementById('AddToHomeScreen')
+	let deferredPrompt
+	window.addEventListener('beforeinstallprompt', (e) => {
+		deferredPrompt = e
+		installNote.style.display = 'block'
+	})
+	installNote.onclick = () => {
+		installNote.style.display = 'none'
+		if (deferredPrompt) {
+			deferredPrompt.prompt()
+			deferredPrompt = null
+		}
+	}
+}

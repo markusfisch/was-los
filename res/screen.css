@@ -113,3 +113,16 @@ td.Details br {
 	color: #555;
 	text-decoration: underline;
 }
+
+#AddToHomeScreen {
+	display: none;
+	cursor: pointer;
+	margin: 0; padding: 1em;
+	position: fixed;
+	top: 0;
+	width: 100%;
+	z-index: 1;
+	color: #fff;
+	background: rgba(0, 0, 0, .75);
+	text-decoration: none;
+}

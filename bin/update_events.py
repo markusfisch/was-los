@@ -305,7 +305,7 @@ def write_html(f, style, events, today, name):
 <style>''')
     f.write(style)
     f.write('''</style>
-<script defer src="search.js"></script>
+<script defer src="main.js"></script>
 </head>
 <body>
 <div id="Search"><div id="DayTimes" class="Picker">''')
@@ -380,6 +380,7 @@ Alle Inhalte sind Eigentum der jeweilig verlinkten Quelle.
 Den Quellcode zu dieser Seite finden Sie
 <a href="https://github.com/markusfisch/was-machen">hier</a>.
 </div>
+<div id="AddToHomeScreen" style="display: none">Als App hinzufügen?</div>
 </body>
 </html>
 ''')

@@ -290,7 +290,7 @@ def fetch_events(from_time, to_time):
 
 def write_html(f, style, events, today, name):
     f.write('''<!doctype html>
-<html>
+<html lang="de">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>

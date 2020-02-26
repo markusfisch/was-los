@@ -358,22 +358,26 @@ onclick="clearQuery()">x</a></div></div>
                 time_marks_keys) else 99
         else:
             anchor_tag = ''
+        source = event['source']
+        place = event['place']
         f.write('''<tr><td class="Image"><img
 src="%s" alt="%s" width="128"/></td>
 <td class="Details"><time datetime="%s" class="When">%s</time>
-<span class="Source">%s</span><br/>
+<span class="Source" onclick="exclude('%s')">%s</span><br/>
 <a class="Name" %shref="%s">%s</a><br/>
-<address class="Place">%s</address></td></tr>
+<address class="Place" onclick="exclude('%s')">%s</address></td></tr>
 ''' % (
             event['image_url'],
             html.escape(event['name']),
             event['begin'],
             dt.strftime('Heute %H:%M' if name_is_digit else '%H:%M, %e. %b'),
-            html.escape(event['source']),
+            html.escape(source.replace("'", '')),
+            html.escape(source),
             anchor_tag,
             event['url'],
             html.escape(event['name']),
-            html.escape(event['place']),
+            html.escape(place.replace("'", '')),
+            html.escape(place),
         ))
     f.write('''</table>
 <div id="Disclaimer">

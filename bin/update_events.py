@@ -380,7 +380,6 @@ Alle Inhalte sind Eigentum der jeweilig verlinkten Quelle.
 Den Quellcode zu dieser Seite finden Sie
 <a href="https://github.com/markusfisch/was-machen">hier</a>.
 </div>
-<div id="AddToHomeScreen" style="display: none">Als App hinzufügen?</div>
 </body>
 </html>
 ''')

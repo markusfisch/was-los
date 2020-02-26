@@ -43,6 +43,11 @@ if (table && search && query) {
 	}
 	query.style.display = 'block'
 	query.focus()
+	const search = window.location.search
+	if (search) {
+		query.value = search.substr(1)
+		filter(table, query.value)
+	}
 }
 
 if ('serviceWorker' in navigator) {

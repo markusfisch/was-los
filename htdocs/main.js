@@ -1,6 +1,10 @@
 'use strict'
 
-function filter(table, query) {
+function clearQuery() {
+	filter(table, query.value = '')
+}
+
+function filter(table, term) {
 	function indexOf(haystack, needles) {
 		let visible = true
 		for (let i = 0, l = needles.length; i < l; ++i) {
@@ -15,7 +19,7 @@ function filter(table, query) {
 		}
 		return visible
 	}
-	const values = query.trim().toLowerCase().split(' ').filter(v => v != '')
+	const values = term.trim().toLowerCase().split(' ').filter(v => v != '')
 	for (const row of table.rows) {
 		row.style.display = indexOf(
 			row.cells[1].innerText.toLowerCase(),
@@ -28,6 +32,7 @@ function filter(table, query) {
 const D = document,
 	table = D.getElementById('EventsTable'),
 	search = D.getElementById('Search'),
+	queryBar = D.getElementById('QueryBar'),
 	query = D.getElementById('Query'),
 	dayTimes = D.getElementById('DayTimes')
 
@@ -41,7 +46,7 @@ if (table && search && query) {
 			filter(table, query.value)
 		}, 300)
 	}
-	query.style.display = 'block'
+	queryBar.style.display = 'flex'
 	query.focus()
 	const search = window.location.search
 	if (search) {

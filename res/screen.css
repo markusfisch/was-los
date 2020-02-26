@@ -89,8 +89,13 @@ td.Details br {
 	color: #555;
 }
 
-#Query {
+#QueryBar {
 	display: none;
+	flex-direction: row;
+}
+
+#Query {
+	flex-grow: 1;
 	margin: 0; padding: 0 1em 1em;
 	border: 0;
 	outline: none;
@@ -99,6 +104,13 @@ td.Details br {
 	font-family: 'Roboto Mono', Menlo, monospace;
 	font-size: 110%;
 	line-height: 150%;
+}
+
+#Clear {
+	padding: 0 1em;
+	color: #fff;
+	text-decoration: none;
+	cursor: pointer;
 }
 
 #Disclaimer {

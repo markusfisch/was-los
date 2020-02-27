@@ -4,6 +4,7 @@ import html
 import json
 import requests
 import sys
+import traceback
 
 from datetime import datetime, timedelta
 from lxml import etree, html as lxmlhtml
@@ -167,9 +168,10 @@ def fetch_curt(events, from_time, to_time, uri):
                 'source': '#curt',
             }
             date = datetime.strptime(
-                dates[0].text,
-                '%d.%m.'
-            ).replace(year=current_year).strftime('%Y-%m-%d')
+                # add current year so 29.02. will not raise a ValueError
+                '%s%s' % (dates[0].text, current_year, ),
+                '%d.%m.%Y'
+            ).strftime('%Y-%m-%d')
             time = times[0].text.replace('.', ':')
             add_event(
                 events,
@@ -281,7 +283,7 @@ def fetch_events(from_time, to_time):
         try:
             source[0](events, from_time, to_time, source[1])
         except Exception as e:
-            print(str(e))
+            print(traceback.format_exc())
     # now we need a list to sort the events by time and name
     events = [v for v in events.values()]
     events.sort(key=lambda event: event['begin'] + event['name'])

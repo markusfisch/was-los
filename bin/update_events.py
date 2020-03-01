@@ -270,7 +270,7 @@ def fetch_events(from_time, to_time):
     events = {}
     for source in [
         (fetch_meine_veranstaltungen,
-                'http://meine-veranstaltungen.net/export.php5'),
+                'https://meine-veranstaltungen.net/export.php5'),
         (fetch_curt, 'https://www.curt.de/nbg/termine/'),
         (fetch_cinecitta, 'https://www.cinecitta.de/common/ajax.php?' +
                 'bereich=portal&modul_id=101&klasse=vorstellungen&' +
@@ -291,6 +291,9 @@ def fetch_events(from_time, to_time):
 
 
 def write_html(f, style, events, today, name):
+    def https(url):
+        return url.replace('http://', 'https://')
+
     f.write('''<!doctype html>
 <html lang="de">
 <head>
@@ -369,14 +372,14 @@ src="%s" alt="%s" width="128"/></td>
 <a class="Name" %shref="%s">%s</a><br/>
 <address class="Place" onclick="exclude('%s')">%s</address></td></tr>
 ''' % (
-            event['image_url'],
+            https(event['image_url']),
             html.escape(event['name']),
             event['begin'],
             dt.strftime('Heute %H:%M' if name_is_digit else '%H:%M, %e. %b'),
             html.escape(source.replace("'", '')),
             html.escape(source),
             anchor_tag,
-            event['url'],
+            https(event['url']),
             html.escape(event['name']),
             html.escape(place.replace("'", '')),
             html.escape(place),

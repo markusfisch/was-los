@@ -41,6 +41,7 @@ function filter(table, term) {
 }
 
 const D = document,
+	W = window,
 	table = D.getElementById('EventsTable'),
 	search = D.getElementById('Search'),
 	queryBar = D.getElementById('QueryBar'),
@@ -55,11 +56,12 @@ if (table && search && query) {
 		}
 		timer = setTimeout(() => {
 			filter(table, query.value)
+			W.scrollTo(0, 0)
 		}, 300)
 	}
 	queryBar.style.display = 'flex'
 	query.focus()
-	const search = window.location.search
+	const search = W.location.search
 	if (search) {
 		query.value = search.substr(1)
 		filter(table, query.value)

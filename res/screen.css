@@ -59,8 +59,11 @@ td.Details br {
 	font-size: 70%;
 }
 
-.Source, .Place {
+.Exclude {
 	cursor: pointer;
+	color: #555;
+	float: right;
+	font-size: 1rem;
 }
 
 #Search {

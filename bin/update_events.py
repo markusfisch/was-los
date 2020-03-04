@@ -372,7 +372,7 @@ src="%s" alt="%s" width="128"/></td>
 <span class="Source">%s</span><span class="Exclude"
 onclick="exclude('%s')">x</span><br/>
 <a class="Name" %shref="%s">%s<span class="Exclude"
-onclick="exclude('%s')">x</span></a><br/>
+onclick="exclude('%s'); return false">x</span></a><br/>
 <address class="Place">%s<span class="Exclude"
 onclick="exclude('%s')">x</span></address></td></tr>
 ''' % (

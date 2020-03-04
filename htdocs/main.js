@@ -68,6 +68,13 @@ if (table && search && query) {
 	}
 }
 
+W.onload = () => {
+	const term = query.value
+	if (term) {
+		filter(table, term)
+	}
+}
+
 if ('serviceWorker' in navigator) {
 	navigator.serviceWorker.register('service-worker.js')
 }

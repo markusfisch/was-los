@@ -59,14 +59,6 @@ td.Details br {
 	font-size: 70%;
 }
 
-.Exclude {
-	display: none;
-	cursor: pointer;
-	color: #555;
-	float: right;
-	font-size: 1rem;
-}
-
 #Search {
 	margin: 0; padding: 1em 0 0;
 	position: fixed;

@@ -369,25 +369,19 @@ onclick="clearQuery()">x</a></div></div>
         f.write('''<tr><td class="Image"><img
 src="%s" alt="%s" width="128"/></td>
 <td class="Details"><time datetime="%s" class="When">%s</time>
-<span class="Source">%s</span><span class="Exclude"
-onclick="exclude('%s')">x</span><br/>
-<a class="Name" %shref="%s">%s<span class="Exclude"
-onclick="exclude('%s'); return false">x</span></a><br/>
-<address class="Place">%s<span class="Exclude"
-onclick="exclude('%s')">x</span></address></td></tr>
+<span class="Source">%s</span><br/>
+<a class="Name" %shref="%s">%s</a><br/>
+<address class="Place">%s</address></td></tr>
 ''' % (
             https(event['image_url']),
             html.escape(event['name']),
             event['begin'],
             dt.strftime('Heute %H:%M' if name_is_digit else '%H:%M, %e. %b'),
             html.escape(source),
-            html.escape(source.replace("'", '')),
             anchor_tag,
             https(event['url']),
             html.escape(name),
-            html.escape(name),
             html.escape(place),
-            html.escape(place.replace("'", '')),
         ))
     f.write('''</table>
 <div id="Disclaimer">

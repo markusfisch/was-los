@@ -1,16 +1,5 @@
 'use strict'
 
-function exclude(what) {
-	what = what.split(' ')[0] + ' '
-	let s = query.value + ' '
-	const excl = '!' + what
-	if (s.indexOf(excl) < 0) {
-		s += excl
-		query.value = s.trim()
-		filter(table, query.value)
-	}
-}
-
 function clearQuery() {
 	filter(table, query.value = '')
 }
@@ -72,9 +61,6 @@ W.onload = () => {
 	const term = query.value
 	if (term) {
 		filter(table, term)
-	}
-	for (const e of D.getElementsByClassName('Exclude')) {
-		e.style.display = 'block'
 	}
 }
 

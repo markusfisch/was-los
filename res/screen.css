@@ -96,7 +96,7 @@ td.Details br {
 
 #Query {
 	flex-grow: 1;
-	margin: 0; padding: 0 1em 1em;
+	margin: 0; padding: 0 1em calc(1em + env(safe-area-inset-bottom));
 	border: 0;
 	outline: none;
 	background: transparent; color: #fff;

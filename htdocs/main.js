@@ -73,6 +73,9 @@ W.onload = () => {
 	if (term) {
 		filter(table, term)
 	}
+	for (const e of D.getElementsByClassName('Exclude')) {
+		e.style.display = 'block'
+	}
 }
 
 if ('serviceWorker' in navigator) {

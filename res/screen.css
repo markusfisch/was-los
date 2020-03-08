@@ -60,6 +60,7 @@ td.Details br {
 }
 
 .Exclude {
+	display: none;
 	cursor: pointer;
 	color: #555;
 	float: right;

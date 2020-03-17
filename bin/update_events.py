@@ -159,20 +159,29 @@ def fetch_curt(events, from_time, to_time, uri):
                 len(places) < 1 or
                 len(titles) < 1):
                 continue
+            time = times[0].text
+            date = dates[0].text
+            place = places[0].text
+            title = titles[0].text
+            if (time is None or
+                date is None or
+                place is None or
+                title is None):
+                continue
+            time = time.replace('.', ':')
+            date = datetime.strptime(
+                # add current year so 29.02. will not raise a ValueError
+                '%s%s' % (date, current_year, ),
+                '%d.%m.%Y'
+            ).strftime('%Y-%m-%d')
             template = {
-                'name': titles[0].text,
+                'name': title,
                 'image_url':
                     'https://www.curt.de/nbg/templates/css/icon_logo.svg',
                 'url': titles[0].attrib['href'],
-                'place': places[0].text,
+                'place': place,
                 'source': '#curt',
             }
-            date = datetime.strptime(
-                # add current year so 29.02. will not raise a ValueError
-                '%s%s' % (dates[0].text, current_year, ),
-                '%d.%m.%Y'
-            ).strftime('%Y-%m-%d')
-            time = times[0].text.replace('.', ':')
             add_event(
                 events,
                 from_time,

@@ -26,16 +26,19 @@ The following packages need to be installed to generate the static HTML pages:
 
 ## Generation
 
-There's a Python script that's supposed to run on midnight that will generate
-a couple of static HTML pages in the given directory:
+There's a Python script that's supposed to run around midnight that will
+generate a couple of static HTML pages:
 
 	$ ./bin/update_events.py htdocs res/screen.css
 
-The second argument is the style sheet to embed in the static HTML pages.
-The style sheet is embedded because it is quite small and embedding keeps
-browsers from showing unstyled content when on a bad connection.
+The first argument (`htdocs`) is the output directory.
 
-In this repo, you can simply run `make` to regenerate the HTML files:
+The second argument (`res/screen.css`) is the stylesheet to embed in the
+static HTML pages. The stylesheet is embedded because it is quite small and
+embedding it keeps browsers from showing unstyled content when on a bad
+connection.
+
+In this repo, you can simply run `make` to generate the HTML files:
 
 	$ make
 

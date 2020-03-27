@@ -376,7 +376,7 @@ onclick="clearQuery()">x</a></div></div>
         place = event['place']
         name = event['name']
         f.write('''<tr><td class="Image"><img
-src="%s" alt="%s" width="128"/></td>
+src="%s" alt="%s" width="128" loading="lazy"/></td>
 <td class="Details"><time datetime="%s" class="When">%s</time>
 <span class="Source">%s</span><br/>
 <a class="Name" %shref="%s">%s</a><br/>

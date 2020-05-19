@@ -274,6 +274,34 @@ def fetch_kino(events, from_time, to_time, uri):
                 )
 
 
+def fetch_autokinosommer(events, from_time, to_time, uri):
+    tree = lxmlhtml.fromstring(requests.get(uri).content)
+    for day in tree.xpath('//div[contains(@class, "day_content")]'):
+        date = day.attrib['data-date']
+        for movie in day.xpath('div/div[@class="row"]'):
+            times = movie.xpath('div/div[@class="movie-time"]')
+            names = movie.xpath('div/div[@class="movie-title"]')
+            posters = movie.xpath('div/div/img')
+            if len(times) < 1 or len(names) < 1 or len(posters) < 1:
+                continue
+            time = times[0].text.split(' ')[0]
+            template = {
+                'name': names[0].text,
+                'place': 'Parkplatz P31 Airport Nürnberg',
+                'image_url': posters[0].attrib['src'],
+                'url': uri,
+                'source': '#autokino',
+            }
+            add_event(
+                events,
+                from_time,
+                to_time,
+                template,
+                date,
+                time,
+            )
+
+
 def fetch_events(from_time, to_time):
     # use a dict to be able to merge events
     events = {}
@@ -287,6 +315,7 @@ def fetch_events(from_time, to_time):
         (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/nuernberg/'),
         (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/fuerth/'),
         (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/erlangen/'),
+        (fetch_autokinosommer, 'https://autokinosommer.de/#programm'),
     ]:
         # try all sources separately to allow failures
         try:

@@ -52,5 +52,6 @@ Currently aggregates events and movie screenings from:
 * [curt.de](https://www.curt.de/nbg/)
 * [Kino.de](https://www.kino.de/)
 * [Cinecitta Nürnberg](https://www.cinecitta.de/)
+* [Autokinosommer](https://autokinosommer.de/)
 
 All content is property of those sources.

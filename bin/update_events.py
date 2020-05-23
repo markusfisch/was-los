@@ -278,31 +278,59 @@ def fetch_kino(events, from_time, to_time, uri):
 
 
 def fetch_autokinosommer(events, from_time, to_time, uri):
-    tree = lxmlhtml.fromstring(requests.get(uri).content)
-    for day in tree.xpath('//div[contains(@class, "day_content")]'):
-        date = day.attrib['data-date']
-        for movie in day.xpath('div/div[@class="row"]'):
-            times = movie.xpath('div/div[@class="movie-time"]')
-            names = movie.xpath('div/div[@class="movie-title"]')
-            posters = movie.xpath('div/div/img')
-            if len(times) < 1 or len(names) < 1 or len(posters) < 1:
-                continue
-            time = times[0].text.split(' ')[0]
-            template = {
-                'name': names[0].text,
-                'place': 'Parkplatz P31 Airport Nürnberg',
-                'image_url': posters[0].attrib['src'],
-                'url': uri,
-                'source': '#autokino',
-            }
-            add_event(
-                events,
-                from_time,
-                to_time,
-                template,
-                date,
-                time,
-            )
+    def fetch_week(tree):
+        for day in tree.xpath('//div[contains(@class, "day_content")]'):
+            date = day.attrib['data-date']
+            for movie in day.xpath('div/div[@class="row"]'):
+                times = movie.xpath('div/div[@class="movie-time"]')
+                names = movie.xpath('div/div[@class="movie-title"]')
+                posters = movie.xpath('div/div/img')
+                if len(times) < 1 or len(names) < 1 or len(posters) < 1:
+                    continue
+                time = times[0].text.split(' ')[0]
+                template = {
+                    'name': names[0].text,
+                    'place': 'Parkplatz P31 Airport Nürnberg',
+                    'image_url': posters[0].attrib['src'],
+                    'url': uri,
+                    'source': '#autokino',
+                }
+                add_event(
+                    events,
+                    from_time,
+                    to_time,
+                    template,
+                    date,
+                    time,
+                )
+
+    response = requests.get(uri)
+    tree = lxmlhtml.fromstring(response.content)
+    fetch_week(tree)
+    csrf_tokens = tree.xpath('//meta[@name="csrf-token"]')
+    if len(csrf_tokens) > 0:
+        csrf_token = csrf_tokens[0].attrib['content']
+        cookies = []
+        for cookie in response.headers['Set-Cookie'].split(';'):
+            for part in cookie.split(','):
+                part = part.strip()
+                if part.startswith('XSRF-TOKEN='):
+                    cookies.append(part)
+                elif part.startswith('laravel_session='):
+                    cookies.append(part)
+        headers = {
+            'X-CSRF-TOKEN': csrf_token,
+            'Cookie': '; '.join(cookies),
+        }
+        # start with today because autokinosommer.de doesn't always start
+        # with current but the last week
+        date = datetime.today()
+        for i in range(2):
+            payload = {'week_start': date.strftime('%Y-%m-%d')}
+            response = requests.post(uri, headers=headers, data=payload)
+            tree = lxmlhtml.fromstring(response.content)
+            fetch_week(tree)
+            date += timedelta(days=7)
 
 
 def fetch_events(from_time, to_time):
@@ -318,7 +346,7 @@ def fetch_events(from_time, to_time):
         (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/nuernberg/'),
         (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/fuerth/'),
         (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/erlangen/'),
-        (fetch_autokinosommer, 'https://autokinosommer.de/#programm'),
+        (fetch_autokinosommer, 'https://autokinosommer.de/'),
     ]:
         # try all sources separately to allow failures
         try:

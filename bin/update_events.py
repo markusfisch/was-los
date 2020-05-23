@@ -304,33 +304,33 @@ def fetch_autokinosommer(events, from_time, to_time, uri):
                     time,
                 )
 
+    # First we need to get a session cookie so we can make a POST request
+    # specifying a date. The default GET response doesn't always contain
+    # the current but the last week, which makes it quite useless.
     response = requests.get(uri)
     tree = lxmlhtml.fromstring(response.content)
-    fetch_week(tree)
     csrf_tokens = tree.xpath('//meta[@name="csrf-token"]')
-    if len(csrf_tokens) > 0:
-        csrf_token = csrf_tokens[0].attrib['content']
-        cookies = []
-        for cookie in response.headers['Set-Cookie'].split(';'):
-            for part in cookie.split(','):
-                part = part.strip()
-                if part.startswith('XSRF-TOKEN='):
-                    cookies.append(part)
-                elif part.startswith('laravel_session='):
-                    cookies.append(part)
-        headers = {
-            'X-CSRF-TOKEN': csrf_token,
-            'Cookie': '; '.join(cookies),
-        }
-        # start with today because autokinosommer.de doesn't always start
-        # with current but the last week
-        date = datetime.today()
-        for i in range(2):
-            payload = {'week_start': date.strftime('%Y-%m-%d')}
-            response = requests.post(uri, headers=headers, data=payload)
-            tree = lxmlhtml.fromstring(response.content)
-            fetch_week(tree)
-            date += timedelta(days=7)
+    if len(csrf_tokens) < 1:
+        return
+    csrf_token = csrf_tokens[0].attrib['content']
+    cookies = []
+    for cookie in response.headers['Set-Cookie'].split(';'):
+        for part in cookie.split(','):
+            part = part.strip()
+            if part.startswith('XSRF-TOKEN='):
+                cookies.append(part)
+            elif part.startswith('laravel_session='):
+                cookies.append(part)
+    headers = {
+        'X-CSRF-TOKEN': csrf_token,
+        'Cookie': '; '.join(cookies),
+    }
+    # Now we can make a POST request and get all showings for a week from
+    # today on.
+    payload = {'week_start': datetime.today().strftime('%Y-%m-%d')}
+    response = requests.post(uri, headers=headers, data=payload)
+    tree = lxmlhtml.fromstring(response.content)
+    fetch_week(tree)
 
 
 def fetch_events(from_time, to_time):

@@ -33,6 +33,10 @@ def same(places, place):
     return False
 
 
+def ensure_https(url):
+    return url.replace('http://', 'https://')
+
+
 def add_event(events, from_time, to_time, template, day, begin):
     begin = day + ' ' + (begin if begin != "" else '00:00')
     begin_date = datetime.strptime(begin, '%Y-%m-%d %H:%M')
@@ -41,6 +45,8 @@ def add_event(events, from_time, to_time, template, day, begin):
     template['name'] = html.unescape(template['name'])
     template['place'] = html.unescape(template['place'])
     template['begin'] = begin
+    template['image_url'] = ensure_https(template['image_url'])
+    template['url'] = ensure_https(template['url'])
     key = begin + essence(template['name'])
     event = events.get(key)
     if event is None:
@@ -410,9 +416,6 @@ def fetch_events(from_time, to_time):
 
 
 def write_html(f, style, events, today, name):
-    def https(url):
-        return url.replace('http://', 'https://')
-
     f.write('''<!doctype html>
 <html lang="de">
 <head>
@@ -492,13 +495,13 @@ src="%s" alt="%s" width="128" loading="lazy"/></td>
 <a class="Name" %shref="%s">%s</a><br/>
 <address class="Place">%s</address></td></tr>
 ''' % (
-            https(event['image_url']),
+            event['image_url'],
             html.escape(event['name']),
             event['begin'],
             dt.strftime('Heute %H:%M' if name_is_digit else '%H:%M, %e. %b'),
             html.escape(source),
             anchor_tag,
-            https(event['url']),
+            event['url'],
             html.escape(name),
             html.escape(place),
         ))

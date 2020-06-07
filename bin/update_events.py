@@ -343,6 +343,10 @@ def fetch_autokinosommer(events, from_time, to_time, uri):
 def fetch_mobileskino(events, from_time, to_time, uri):
     base = 'https://www.mobileskino.de'
     tree = lxmlhtml.fromstring(requests.get(uri).content)
+    places = tree.xpath('//div[@class="venue"]/h1')
+    if len(places) < 1:
+        return
+    place = places[0].text
     for item in tree.xpath('//ol[@class="showings-list"]/li'):
         movies = item.xpath('div[@class="movie"]')
         if len(movies) < 1:
@@ -373,7 +377,7 @@ def fetch_mobileskino(events, from_time, to_time, uri):
         time = m.group(0)
         template = {
             'name': names[0].text,
-            'place': 'Autokino am Max-Morlock-Stadion',
+            'place': place,
             'image_url': base + posters[0].attrib['src'],
             'url': base + names[0].attrib['href'],
             'source': '#mobileskino',
@@ -402,7 +406,10 @@ def fetch_events(from_time, to_time):
         (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/fuerth/'),
         (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/erlangen/'),
         (fetch_autokinosommer, 'https://autokinosommer.de/'),
-        (fetch_mobileskino, 'https://www.mobileskino.de/filme/'),
+        (fetch_mobileskino,
+                'https://www.mobileskino.de/filme/spielort/auf-aeg/'),
+        (fetch_mobileskino,
+                'https://www.mobileskino.de/filme/spielort/autokino-stadion/'),
     ]:
         # try all sources separately to allow failures
         try:

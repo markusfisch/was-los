@@ -567,7 +567,7 @@ def main(path='.', stylesheet='screen.css'):
     today = datetime.today()
     # today at 00:00
     today_start = datetime(today.year, today.month, today.day)
-    events = fetch_events(today_start, today_start + timedelta(days=6))
+    events = fetch_events(today_start, today_start + timedelta(days=7))
     for file_name, contents in generate_files(events, today):
         with open('%s/%s.html' % (path, file_name, ), 'w') as f:
             write_html(f, style, contents, today, file_name)

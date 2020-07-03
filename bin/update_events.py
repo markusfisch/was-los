@@ -340,58 +340,6 @@ def fetch_autokinosommer(events, from_time, to_time, uri):
     fetch_week(tree)
 
 
-def fetch_mobileskino(events, from_time, to_time, uri):
-    base = 'https://www.mobileskino.de'
-    tree = lxmlhtml.fromstring(requests.get(uri).content)
-    places = tree.xpath('//div[@class="venue"]/h1')
-    if len(places) < 1:
-        return
-    place = places[0].text
-    for item in tree.xpath('//ol[@class="showings-list"]/li'):
-        movies = item.xpath('div[@class="movie"]')
-        if len(movies) < 1:
-            continue
-        movie = movies[0]
-        posters = movie.xpath('div/a/img')
-        names = movie.xpath('div/h3/a')
-        if len(posters) < 1 or len(names) < 1:
-            continue
-        showings = item.xpath('table[@class="showings"]')
-        if len(showings) < 1:
-            continue
-        showing = showings[0]
-        dates = showing.xpath('tr/td[@class="small-left"]/strong')
-        times = showing.xpath('tr/td[@class="small-right"]')
-        if len(dates) < 1 or len(times) < 1:
-            continue
-        m = re.search(
-            '([0-9]{2})\.([0-9]{2})\.([0-9]{4})',
-            dates[0].text_content()
-        )
-        if m is None:
-            continue
-        date = m.group(3) + '-' + m.group(2) + '-' + m.group(1)
-        m = re.search('([0-9]{2}:[0-9]{2})', times[0].text_content())
-        if m is None:
-            continue
-        time = m.group(0)
-        template = {
-            'name': names[0].text,
-            'place': place,
-            'image_url': base + posters[0].attrib['src'],
-            'url': base + names[0].attrib['href'],
-            'source': '#mobileskino',
-        }
-        add_event(
-            events,
-            from_time,
-            to_time,
-            template,
-            date,
-            time,
-        )
-
-
 def fetch_events(from_time, to_time):
     # use a dict to be able to merge events
     events = {}
@@ -406,10 +354,6 @@ def fetch_events(from_time, to_time):
         (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/fuerth/'),
         (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/erlangen/'),
         (fetch_autokinosommer, 'https://autokinosommer.de/'),
-        (fetch_mobileskino,
-                'https://www.mobileskino.de/filme/spielort/auf-aeg/'),
-        (fetch_mobileskino,
-                'https://www.mobileskino.de/filme/spielort/autokino-stadion/'),
     ]:
         # try all sources separately to allow failures
         try:

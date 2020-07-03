@@ -53,6 +53,5 @@ Currently aggregates events and movie screenings from:
 * [Kino.de](https://www.kino.de/)
 * [Cinecitta Nürnberg](https://www.cinecitta.de/)
 * [Autokinosommer](https://autokinosommer.de/)
-* [Mobiles Kino](https://www.mobileskino.de/)
 
 All content is property of those sources.

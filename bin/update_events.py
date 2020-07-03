@@ -285,59 +285,50 @@ def fetch_kino(events, from_time, to_time, uri):
 
 
 def fetch_autokinosommer(events, from_time, to_time, uri):
-    def fetch_week(tree):
-        for day in tree.xpath('//div[contains(@class, "day_content")]'):
-            date = day.attrib['data-date']
-            for movie in day.xpath('div/div[@class="row"]'):
-                times = movie.xpath('div/div[@class="movie-time"]')
-                names = movie.xpath('div/div[@class="movie-title"]')
-                posters = movie.xpath('div/div/img')
-                if len(times) < 1 or len(names) < 1 or len(posters) < 1:
-                    continue
-                time = times[0].text.split(' ')[0]
-                template = {
-                    'name': names[0].text,
-                    'place': 'Parkplatz P31 Airport Nürnberg',
-                    'image_url': posters[0].attrib['src'],
-                    'url': uri,
-                    'source': '#autokino',
-                }
-                add_event(
-                    events,
-                    from_time,
-                    to_time,
-                    template,
-                    date,
-                    time,
-                )
+    def complete_url(url):
+        if url.startswith('http'):
+            return url
+        elif url.startswith('/'):
+            return uri + url[1:]
+        else:
+            return uri
 
-    # First we need to get a session cookie so we can make a POST request
-    # specifying a date. The default GET response doesn't always contain
-    # the current but the last week, which makes it quite useless.
-    response = requests.get(uri)
-    tree = lxmlhtml.fromstring(response.content)
-    csrf_tokens = tree.xpath('//meta[@name="csrf-token"]')
-    if len(csrf_tokens) < 1:
-        return
-    csrf_token = csrf_tokens[0].attrib['content']
-    cookies = []
-    for cookie in response.headers['Set-Cookie'].split(';'):
-        for part in cookie.split(','):
-            part = part.strip()
-            if part.startswith('XSRF-TOKEN='):
-                cookies.append(part)
-            elif part.startswith('laravel_session='):
-                cookies.append(part)
-    headers = {
-        'X-CSRF-TOKEN': csrf_token,
-        'Cookie': '; '.join(cookies),
-    }
-    # Now we can make a POST request and get all showings for a week from
-    # today on.
-    payload = {'week_start': datetime.today().strftime('%Y-%m-%d')}
-    response = requests.post(uri, headers=headers, data=payload)
-    tree = lxmlhtml.fromstring(response.content)
-    fetch_week(tree)
+
+    tree = lxmlhtml.fromstring(requests.get(uri).content)
+    for movie in tree.xpath('//div[@class="movie-content"]'):
+        details = movie.xpath('div/div/div[contains(@class, "movie-details")]')
+        posters = movie.xpath(
+            'div/div/div[contains(@class, "movie-poster")]/img'
+        )
+        if len(details) < 1 or len(posters) < 1:
+            continue
+        dates = details[0].xpath('div[@class="movie-date"]')
+        times = details[0].xpath('div[@class="movie-time"]')
+        names = details[0].xpath('div[@class="movie-title"]')
+        if len(dates) < 1 or len(times) < 1 or len(names) < 1:
+            continue
+        date = dates[0].text_content().split('|')
+        if len(date) < 2:
+            continue
+        dt = datetime.strptime(date[1].strip(), '%d.%m.%Y')
+        urls = details[0].xpath('a[@class="movie-buy"]')
+        template = {
+            'name': names[0].text,
+            'place': 'Parkplatz P31 Airport Nürnberg',
+            'image_url': posters[0].attrib['src'],
+            'url': complete_url(
+                urls[0].attrib['href'] if len(urls) > 0 else ''
+            ),
+            'source': '#autokino',
+        }
+        add_event(
+            events,
+            from_time,
+            to_time,
+            template,
+            dt.strftime('%Y-%m-%d'),
+            times[0].text.split(' ')[0],
+        )
 
 
 def fetch_events(from_time, to_time):

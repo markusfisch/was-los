@@ -394,7 +394,7 @@ def write_html(f, style, events, today, name):
         else:
             href = '%s.html#%d' % (name, hour, )
         f.write('<a href="%s" class="Pick">%s</a>' % (href, label, ))
-    f.write('</div><div class="Picker">''')
+    f.write('</div><div id="DayPicker" class="Picker">''')
     if name_is_digit:
         name = current_weekday
     for filename, label in {

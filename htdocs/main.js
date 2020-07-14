@@ -27,6 +27,9 @@ function filter(table, term) {
 		) ? 'table-row' : 'none'
 	}
 	dayTimes.style.display = values.length > 0 ? 'none' : 'flex'
+	for (let a of dayLinks) {
+		a.href = a.originalHref + '?' + encodeURI(term)
+	}
 }
 
 const D = document,
@@ -35,7 +38,10 @@ const D = document,
 	search = D.getElementById('Search'),
 	queryBar = D.getElementById('QueryBar'),
 	query = D.getElementById('Query'),
+	dayPicker = D.getElementById('DayPicker'),
 	dayTimes = D.getElementById('DayTimes')
+
+let dayLinks
 
 if (table && search && query) {
 	let timer = null
@@ -50,6 +56,10 @@ if (table && search && query) {
 	}
 	queryBar.style.display = 'flex'
 	query.focus()
+	dayLinks = dayPicker.getElementsByTagName('a')
+	for (let a of dayLinks) {
+		a.originalHref = a.href
+	}
 	const search = W.location.search
 	if (search) {
 		query.value = search.substr(1)

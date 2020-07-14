@@ -346,11 +346,14 @@ def fetch_events(from_time, to_time):
         (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/erlangen/'),
         (fetch_autokinosommer, 'https://autokinosommer.de/'),
     ]:
+        count = len(events)
         # try all sources separately to allow failures
         try:
             source[0](events, from_time, to_time, source[1])
         except Exception as e:
             print(traceback.format_exc())
+        if len(events) == count:
+            print('%s did not add any events.' % (source[1], ))
     # now we need a list to sort the events by time and name
     events = [v for v in events.values()]
     events.sort(key=lambda event: event['begin'] + event['name'])

@@ -104,7 +104,7 @@ def fetch_meine_veranstaltungen(events, from_time, to_time, uri):
             t = hour.attrib['TYP']
             if t == '1':
                 date = hour.xpath('DATUM')[0]
-                if date.attrib['ABGESAGT'] is not '1':
+                if date.attrib['ABGESAGT'] != '1':
                     add_event(
                         events,
                         from_time,
@@ -115,7 +115,7 @@ def fetch_meine_veranstaltungen(events, from_time, to_time, uri):
                     )
             elif t == '2':
                 for date in hour.xpath('DATUM'):
-                    if date.attrib['ABGESAGT'] is not '1':
+                    if date.attrib['ABGESAGT'] != '1':
                         add_event(
                             events,
                             from_time,
@@ -131,7 +131,7 @@ def fetch_meine_veranstaltungen(events, from_time, to_time, uri):
                 end = hour.xpath('DATUM2')[0].text
                 for open_day in hour.xpath('OFFENETAGE/OFFENERTAG'):
                     for day in collect_days(begin, end, open_day.text):
-                        if open_day.attrib['ABGESAGT'] is not '1':
+                        if open_day.attrib['ABGESAGT'] != '1':
                             days[day] = open_day.attrib['BEGINN']
                 # remove exceptions
                 exceptions = hour.xpath('AUSNAHMEN/text()')

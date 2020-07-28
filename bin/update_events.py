@@ -154,54 +154,6 @@ def fetch_meine_veranstaltungen(events, from_time, to_time, uri):
             pass
 
 
-def fetch_curt(events, from_time, to_time, uri):
-    current_year = datetime.today().year
-    tree = lxmlhtml.fromstring(requests.get(uri).content)
-    for eventlist in tree.xpath('//div[@id="eventlist"]'):
-        for event in eventlist.xpath(
-                'div[@class="content"]/div[@class="event"]'):
-            times = event.xpath('div/div/div[@class="time"]')
-            dates = event.xpath('div/div/div[@class="dat"]')
-            places = event.xpath('div/div/a[@class="loc"]')
-            titles = event.xpath('div/div/div[@class="titel"]/a')
-            if (len(times) < 1 or
-                len(dates) < 1 or
-                len(places) < 1 or
-                len(titles) < 1):
-                continue
-            time = times[0].text
-            date = dates[0].text
-            place = places[0].text
-            title = titles[0].text
-            if (time is None or
-                date is None or
-                place is None or
-                title is None):
-                continue
-            time = time.replace('.', ':')
-            date = datetime.strptime(
-                # add current year so 29.02. will not raise a ValueError
-                '%s%s' % (date, current_year, ),
-                '%d.%m.%Y'
-            ).strftime('%Y-%m-%d')
-            template = {
-                'name': title,
-                'image_url':
-                    'https://www.curt.de/nbg/templates/css/icon_logo.svg',
-                'url': titles[0].attrib['href'],
-                'place': place,
-                'source': '#curt',
-            }
-            add_event(
-                events,
-                from_time,
-                to_time,
-                template,
-                date,
-                time,
-            )
-
-
 def fetch_cinecitta(events, from_time, to_time, uri):
     shows = requests.get(uri).json()
     for item in shows['daten']['items']:
@@ -337,7 +289,6 @@ def fetch_events(from_time, to_time):
     for source in [
         (fetch_meine_veranstaltungen,
                 'https://meine-veranstaltungen.net/export.php5'),
-        (fetch_curt, 'https://www.curt.de/nbg/termine/'),
         (fetch_cinecitta, 'https://www.cinecitta.de/common/ajax.php?' +
                 'bereich=portal&modul_id=101&klasse=vorstellungen&' +
                 'cli_mode=1&com=anzeigen_spielplan'),

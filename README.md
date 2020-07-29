@@ -1,5 +1,7 @@
 # Was machen?
 
+<img src="htdocs/icon_192.png" alt="Icon" width="128"/>
+
 Simple, searchable list of what to do around Nuremberg, Germany.
 
 ## Rationale

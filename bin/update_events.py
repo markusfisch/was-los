@@ -192,7 +192,7 @@ def fetch_kino(events, from_time, to_time, uri):
             return url
         return 'https://' + url
 
-    lazy_attrib = 'data-pagespeed-lazy-src'
+    data_src = 'data-src'
     tree = lxmlhtml.fromstring(requests.get(uri).content)
     for theater in tree.xpath('//li[@class="cinemaprogram-cinema"]'):
         names = theater.xpath('div[@class="cinemaprogram-meta"]/h3/a')
@@ -202,12 +202,12 @@ def fetch_kino(events, from_time, to_time, uri):
         for movie in theater.xpath(
             'div[@class="cinema-movies-container"]/ul/li'
         ):
-            posters = movie.xpath('article/div[@class="card-media"]/img')
+            posters = movie.xpath('article/div/div/img')
             if len(posters) < 1:
                 continue
-            movie_poster = (posters[0].attrib[lazy_attrib] if
-                lazy_attrib in posters[0].attrib else posters[0].attrib['src'])
-            titles = movie.xpath('article/div[@class="card-body"]/h3/a')
+            movie_poster = (posters[0].attrib[data_src] if
+                data_src in posters[0].attrib else posters[0].attrib['src'])
+            titles = movie.xpath('article/div/h2/a')
             if len(titles) < 1:
                 continue
             movie_url = titles[0].attrib['href']

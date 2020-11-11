@@ -273,7 +273,7 @@ def write_html(f, style, events, today, name):
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
 <meta name="msapplication-navbutton-color" content="#111"/>
-<title>Was machen in Nürnberg, Fürth und Erlangen?</title>
+<title>Was ist los in Nürnberg, Fürth und Erlangen?</title>
 <link rel="apple-touch-icon" href="icon_ios.png"/>
 <link rel="manifest" href="manifest.json"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet"/>
@@ -357,7 +357,7 @@ src="%s" alt="%s" width="128" loading="lazy"/></td>
 <div id="Disclaimer">
 Alle Inhalte sind Eigentum der jeweilig verlinkten Quelle.
 Den Quellcode zu dieser Seite finden Sie
-<a href="https://github.com/markusfisch/was-machen">hier</a>.
+<a href="https://github.com/markusfisch/was-los">hier</a>.
 </div>
 </body>
 </html>

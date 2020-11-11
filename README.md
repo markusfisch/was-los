@@ -1,4 +1,4 @@
-# Was machen?
+# Was ist los um Nürnberg?
 
 <img src="htdocs/icon_192.png" alt="Icon" width="128"/>
 

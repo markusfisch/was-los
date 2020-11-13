@@ -1,6 +1,6 @@
 GENERATOR = ./bin/update_events.py
 HTDOCS = htdocs
-SERVER = m9h@menkent.uberspace.de
+SERVER = m9h@francisco.uberspace.de
 
 html: clean
 	$(GENERATOR) $(HTDOCS) res/screen.css

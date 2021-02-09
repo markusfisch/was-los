@@ -27,7 +27,7 @@ def essence(s):
 def same(places, place):
     # check if the given place is in the comma separated list of places
     place_essence = essence(place)
-    for p in map(lambda s : s.lstrip(), places.split(',')):
+    for p in map(lambda s: s.lstrip(), places.split(',')):
         if place_essence == essence(p):
             return True
     return False

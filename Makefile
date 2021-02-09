@@ -12,7 +12,7 @@ install:
 	scp res/screen.css $(SERVER):res/screen.css
 
 format:
-	pep8ify -n -w -f maximum_line_length bin/*.py
+	pep8ify -n -w -f all -f maximum_line_length bin/*.py
 
 clean:
 	rm -f $(HTDOCS)/*.html

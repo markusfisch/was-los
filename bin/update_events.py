@@ -58,102 +58,6 @@ def add_event(events, from_time, to_time, template, day, begin):
             event['place'] += ', ' + template['place']
 
 
-def fetch_meine_veranstaltungen(events, from_time, to_time, uri):
-    def collect_days(begin, end, weekday):
-        # map german weekday abbreviations to datetime.weekday()
-        if weekday == 'mo':
-            weekday = 0
-        elif weekday == 'di':
-            weekday = 1
-        elif weekday == 'mi':
-            weekday = 2
-        elif weekday == 'do':
-            weekday = 3
-        elif weekday == 'fr':
-            weekday = 4
-        elif weekday == 'sa':
-            weekday = 5
-        elif weekday == 'so':
-            weekday = 6
-        else:
-            return []
-        dt = datetime.strptime(begin, '%Y-%m-%d')
-        until = datetime.strptime(end, '%Y-%m-%d')
-        days = []
-        while dt <= until:
-            if dt.weekday() == weekday:
-                days.append(dt.strftime('%Y-%m-%d'))
-            dt += timedelta(days=1)
-        return days
-
-    def first_or(l, preset):
-        return l[0] if l else preset
-
-    tree = etree.fromstring(requests.get(uri).content)
-    # see https://meineveranstaltungen.nuernberg.de/Export_Schnittstelle.pdf
-    for event in tree.xpath('//ERGEBNIS/VERANSTALTUNG'):
-        try:
-            template = {
-                'name': event.xpath('TITEL/text()')[0],
-                'place': event.xpath('ORT/text()')[0],
-                'image_url': first_or(event.xpath('BILD/text()'), '#'),
-                'url': first_or(event.xpath('DETAILLINK/text()'), '#'),
-                'source': '#mwz',
-            }
-            hour = event.xpath('OEFFNUNGSZEITEN')[0]
-            t = hour.attrib['TYP']
-            if t == '1':
-                date = hour.xpath('DATUM')[0]
-                if date.attrib['ABGESAGT'] != '1':
-                    add_event(
-                        events,
-                        from_time,
-                        to_time,
-                        template,
-                        date.text,
-                        date.attrib['BEGINN'],
-                    )
-            elif t == '2':
-                for date in hour.xpath('DATUM'):
-                    if date.attrib['ABGESAGT'] != '1':
-                        add_event(
-                            events,
-                            from_time,
-                            to_time,
-                            template,
-                            date.text,
-                            date.attrib['BEGINN'],
-                        )
-            elif t == '3':
-                days = {}
-                # add all weekdays between DATUM1 and DATUM2
-                begin = hour.xpath('DATUM1')[0].text
-                end = hour.xpath('DATUM2')[0].text
-                for open_day in hour.xpath('OFFENETAGE/OFFENERTAG'):
-                    for day in collect_days(begin, end, open_day.text):
-                        if open_day.attrib['ABGESAGT'] != '1':
-                            days[day] = open_day.attrib['BEGINN']
-                # remove exceptions
-                exceptions = hour.xpath('AUSNAHMEN/text()')
-                if len(exceptions) > 0:
-                    for day in filter(None, exceptions[0].split(';')):
-                        days.pop(day, None)
-                # overwrite with deviating days
-                for dev_day in hour.xpath('ABWEICHENDETAGE/ABWEICHENDERTAG'):
-                    days[dev_day.text] = dev_day.attrib['BEGINN']
-                for day, time in days.items():
-                    add_event(
-                        events,
-                        from_time,
-                        to_time,
-                        template,
-                        day,
-                        time,
-                    )
-        except IndexError:
-            pass
-
-
 def fetch_cinecitta(events, from_time, to_time, uri):
     shows = requests.get(uri).json()
     for item in shows['daten']['items']:
@@ -245,7 +149,6 @@ def fetch_autokinosommer(events, from_time, to_time, uri):
         else:
             return uri
 
-
     tree = lxmlhtml.fromstring(requests.get(uri).content)
     for movie in tree.xpath('//div[@class="movie-content"]'):
         details = movie.xpath('div/div/div[contains(@class, "movie-details")]')
@@ -287,8 +190,6 @@ def fetch_events(from_time, to_time):
     # use a dict to be able to merge events
     events = {}
     for source in [
-        (fetch_meine_veranstaltungen,
-                'https://meine-veranstaltungen.net/export.php5'),
         (fetch_cinecitta, 'https://www.cinecitta.de/common/ajax.php?' +
                 'bereich=portal&modul_id=101&klasse=vorstellungen&' +
                 'cli_mode=1&com=anzeigen_spielplan'),

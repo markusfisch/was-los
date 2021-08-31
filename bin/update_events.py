@@ -186,48 +186,6 @@ def fetch_autokinosommer(events, from_time, to_time, uri):
         )
 
 
-def fetch_sommernachtfilmfestival(events, from_time, to_time, uri):
-    host = uri.split('/filme')[0]
-    tree = lxmlhtml.fromstring(requests.get(uri).content)
-    listing = tree.xpath('//ol[@class="showings-list"]')
-    if len(listing) < 1:
-        return
-    for movie in listing[0].xpath('li/div[@class="movie"]'):
-        posters = movie.xpath('div[@class="movie__image"]/a/img')
-        if len(posters) < 1:
-            continue
-        names = movie.xpath('div/h3[@class="movie__title"]/a')
-        if len(names) < 1:
-            continue
-        template = {
-            'name': names[0].text,
-            'image_url': host + posters[0].attrib['src'],
-            'url': host + names[0].attrib['href'],
-            'source': '#sommernachtfilmfestival',
-        }
-        showings = movie.xpath('div/div[@class="movie__showings"]/a')
-        for showing in showings:
-            paragraphs = showing.xpath('p')
-            if len(paragraphs) < 1:
-                continue
-            date = re.search('[0-9]{2}.[0-9]{2}.[0-9]{4}', paragraphs[0].text)
-            if date is None:
-                continue
-            dt = datetime.strptime(date.group(0), '%d.%m.%Y')
-            time = re.search('[0-9]{2}:[0-9]{2}', paragraphs[1].text)
-            if time is None:
-                continue
-            template['place'] = paragraphs[2].text_content().strip()
-            add_event(
-                events,
-                from_time,
-                to_time,
-                template,
-                dt.strftime('%Y-%m-%d'),
-                time.group(0)
-            )
-
-
 def fetch_events(from_time, to_time):
     # use a dict to be able to merge events
     events = {}
@@ -239,8 +197,6 @@ def fetch_events(from_time, to_time):
         (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/fuerth/'),
         (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/erlangen/'),
         (fetch_autokinosommer, 'https://autokinosommer.de/'),
-        (fetch_sommernachtfilmfestival,
-                'https://www.sommernachtfilmfestival.de/filme/'),
     ]:
         count = len(events)
         # try all sources separately to allow failures

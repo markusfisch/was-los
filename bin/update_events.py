@@ -140,52 +140,6 @@ def fetch_kino(events, from_time, to_time, uri):
                 )
 
 
-def fetch_autokinosommer(events, from_time, to_time, uri):
-    def complete_url(url):
-        if url.startswith('http'):
-            return url
-        elif url.startswith('/'):
-            return uri + url[1:]
-        else:
-            return uri
-
-    tree = lxmlhtml.fromstring(requests.get(uri).content)
-    for movie in tree.xpath('//div[@class="movie-content"]'):
-        details = movie.xpath('div/div/div[contains(@class, "movie-details")]')
-        posters = movie.xpath(
-            'div/div/div[contains(@class, "movie-poster")]/img'
-        )
-        if len(details) < 1 or len(posters) < 1:
-            continue
-        dates = details[0].xpath('div[@class="movie-date"]')
-        times = details[0].xpath('div[@class="movie-time"]')
-        names = details[0].xpath('div[@class="movie-title"]')
-        if len(dates) < 1 or len(times) < 1 or len(names) < 1:
-            continue
-        date = dates[0].text_content().split('|')
-        if len(date) < 2:
-            continue
-        dt = datetime.strptime(date[1].strip(), '%d.%m.%Y')
-        urls = details[0].xpath('a[@class="movie-buy"]')
-        template = {
-            'name': names[0].text,
-            'place': 'Parkplatz P31 Airport Nürnberg',
-            'image_url': posters[0].attrib['src'],
-            'url': complete_url(
-                urls[0].attrib['href'] if len(urls) > 0 else ''
-            ),
-            'source': '#autokino',
-        }
-        add_event(
-            events,
-            from_time,
-            to_time,
-            template,
-            dt.strftime('%Y-%m-%d'),
-            times[0].text.split(' ')[0],
-        )
-
-
 def fetch_events(from_time, to_time):
     # use a dict to be able to merge events
     events = {}
@@ -196,7 +150,6 @@ def fetch_events(from_time, to_time):
         (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/nuernberg/'),
         (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/fuerth/'),
         (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/erlangen/'),
-        (fetch_autokinosommer, 'https://autokinosommer.de/'),
     ]:
         count = len(events)
         # try all sources separately to allow failures

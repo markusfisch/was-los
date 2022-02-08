@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <svg id="svg839" version="1.1" height="128" width="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
-  <circle r="64" id="circle833" cy="64" cx="64" style="fill:#222222;fill-opacity:1"/>
-  <g transform="matrix(-0.558537, 0.829486, -0.829486, -0.558537, 144.758942, 44.495255)">
-    <g transform="matrix(0.977233, -0.212174, 0.212174, 0.977233, -29.617783, 29.377756)">
-      <rect style="fill: rgb(255, 255, 255); stroke-width: 8.47975; vector-effect: non-scaling-stroke;" transform="matrix(0.707107, 0.707107, -0.707107, 0.707107, 62.812092, 19.499775)" x="26.47" y="11.485" width="9.651" height="42.462" rx="3.89" ry="3.89"/>
-      <rect style="fill: rgb(255, 255, 255); stroke-width: 8.47975; vector-effect: non-scaling-stroke;" transform="matrix(-0.707107, 0.707107, 0.707107, 0.707107, 60.804175, 19.499702)" x="26.47" y="11.485" width="9.651" height="42.462" rx="3.89" ry="3.89"/>
-    </g>
-    <path style="stroke: rgb(255, 255, 255); fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 6px; stroke-dasharray: 10px;" d="M 56.323 68.102 C 66.948 70.192 87.718 74.173 93.473 60.902 C 104.626 35.184 45.393 27.64 57.313 4.003" transform="matrix(0.927188, -0.374595, 0.374595, 0.927188, -10.814543, 31.736053)"/>
-  </g>
+<circle r="64" id="circle833" cy="64" cx="64" style="fill:#222222;fill-opacity:1"/>
+<g transform="matrix(-0.369825, 0.929108, -0.929108, -0.369825, 136.933136, 8.519154)">
+<rect style="fill: rgb(255, 255, 255); stroke-width: 8.47975; vector-effect: non-scaling-stroke;" transform="matrix(0.707107, 0.707107, -0.707107, 0.707107, 62.812092, 19.499775)" x="26.47" y="11.485" width="9.651" height="42.462" rx="3.89" ry="3.89"/>
+<rect style="fill: rgb(255, 255, 255); stroke-width: 8.47975; vector-effect: non-scaling-stroke;" transform="matrix(-0.707107, 0.707107, 0.707107, 0.707107, 60.804175, 19.499702)" x="26.47" y="11.485" width="9.651" height="42.462" rx="3.89" ry="3.89"/>
+</g>
+<path style="stroke: rgb(255, 255, 255); fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 6px; stroke-dasharray: 10px;" d="M 46.183 63.793 C 41.937 73.755 33.74 93.251 45.531 101.63 C 68.38 117.869 88.031 61.482 108.686 78.04"/>
 </svg>

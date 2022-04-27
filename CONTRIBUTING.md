@@ -12,7 +12,7 @@ make sure to [squash][squash] when merging into master:
 
 	$ git merge cool_feature --squash
 
-Then take your time and write a [good commit messages][commit_messages]
+Then take your time and write a [good commit message][commit_messages]
 to keep the history meaningful and useful. One feature, one commit.
 
 [pep8]: https://www.python.org/dev/peps/pep-0008/

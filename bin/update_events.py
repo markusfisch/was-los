@@ -99,7 +99,7 @@ def fetch_kino(events, from_time, to_time, uri):
     data_src = 'data-src'
     tree = lxmlhtml.fromstring(requests.get(uri).content)
     for theater in tree.xpath('//li[@class="cinemaprogram-cinema"]'):
-        names = theater.xpath('div[@class="cinemaprogram-meta"]/h3/a')
+        names = theater.xpath('div[@class="cinemaprogram-meta"]/div/h2')
         if len(names) < 1:
             continue
         theater_name = names[0].text

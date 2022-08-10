@@ -58,6 +58,70 @@ def add_event(events, from_time, to_time, template, day, begin):
             event['place'] += ', ' + template['place']
 
 
+def fetch_vk_nuernberg(events, from_time, to_time, uri):
+    url_template = 'https://www.nuernberg.de/internet/stadtportal/nbg_veranstaltungen.html?r=8&miniweb=stadtportal&vid=%s_%sT%s#vk_detail#'
+
+    def add_vk_nuernberg_event(date, time):
+        template['url'] = url_template % (vid, date, time, )
+        add_event(events, from_time, to_time, template, date, time)
+
+    evs = requests.get(uri).json()
+    for item in evs['VERANSTALTUNGEN']:
+        template = {
+            'name': item['TITEL'],
+            'place': item['ORT'],
+            'image_url': item['BILD'][0]['sn'],
+            'source': '#vknuernberg',
+        }
+        vid = item['VERANSTALTUNGID']
+        dates = item['DATUM']
+        info = dates[1]
+        t = info['SCHEMATYP']
+        if t == 0:
+            for day_time in dates[0]:
+                parts = re.split(r'[A-Z]', day_time)
+                add_vk_nuernberg_event(parts[0], parts[1])
+        elif t == 1:
+            step = info['TAEGLICHXTEN']
+            tt = info['TAEGLICHTYP']
+            end = datetime.strptime(info['ZEITRAUMENDE'], '%Y-%m-%d')
+            for day_time in dates[0]:
+                parts = re.split(r'[A-Z]', day_time)
+                day = datetime.strptime(parts[0], '%Y-%m-%d')
+                while day < end:
+                    if tt == 1 or day.weekday() < 5:
+                        add_vk_nuernberg_event(
+                            day.strftime('%Y-%m-%d'),
+                            parts[1],
+                        )
+                    day += timedelta(days=step)
+        elif t == 2:
+            weekday_to_key = {
+                0: 'WOMO',
+                1: 'WODI',
+                2: 'WOMI',
+                3: 'WODO',
+                4: 'WOFR',
+                5: 'WOSA',
+                6: 'WOSO',
+            }
+            step = info['WOCHEXTE'] * 7
+            end = datetime.strptime(info['ZEITRAUMENDE'], '%Y-%m-%d')
+            for day_time in dates[0]:
+                parts = re.split(r'[A-Z]', day_time)
+                day = datetime.strptime(parts[0], '%Y-%m-%d')
+                while day < end:
+                    offset = day
+                    for i in range(7):
+                        if info[weekday_to_key[offset.weekday()]] > 0:
+                            add_vk_nuernberg_event(
+                                offset.strftime('%Y-%m-%d'),
+                                parts[1],
+                            )
+                        offset += timedelta(days=1)
+                    day += timedelta(days=step)
+
+
 def fetch_cinecitta(events, from_time, to_time, uri):
     shows = requests.get(uri).json()
     for item in shows['daten']['items']:
@@ -215,6 +279,7 @@ def fetch_events(from_time, to_time):
     # use a dict to be able to merge events
     events = {}
     for source in [
+        (fetch_vk_nuernberg, 'https://vk.nuernberg.de/export.php'),
         (fetch_cinecitta, 'https://www.cinecitta.de/common/ajax.php?' +
                 'bereich=portal&modul_id=101&klasse=vorstellungen&' +
                 'cli_mode=1&com=anzeigen_spielplan'),

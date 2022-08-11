@@ -67,9 +67,12 @@ def fetch_vk_nuernberg(events, from_time, to_time, uri):
 
     evs = requests.get(uri).json()
     for item in evs['VERANSTALTUNGEN']:
+        place = item['ORT']
+        if place is None:
+            continue
         template = {
             'name': item['TITEL'],
-            'place': item['ORT'],
+            'place': place,
             'image_url': item['BILD'][0]['sn'],
             'source': '#vknuernberg',
         }

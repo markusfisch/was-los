@@ -79,7 +79,7 @@ def fetch_vk_nuernberg(events, from_time, to_time, uri):
         vid = item['VERANSTALTUNGID']
         dates = item['DATUM']
         info = dates[1]
-        t = info['SCHEMATYP']
+        t = info['SCHEMATYP'] if 'SCHEMATYP' in info else 0
         if t == 0:
             for day_time in dates[0]:
                 parts = re.split(r'[A-Z]', day_time)

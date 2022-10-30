@@ -174,10 +174,12 @@ def fetch_kino(events, from_time, to_time, uri):
             'div[@class="cinema-movies-container"]/ul/li'
         ):
             posters = movie.xpath('article/div/div/img')
-            if len(posters) < 1:
-                continue
-            movie_poster = (posters[0].attrib[data_src] if
-                data_src in posters[0].attrib else posters[0].attrib['src'])
+            if len(posters) > 0:
+                movie_poster = (posters[0].attrib[data_src] if
+                    data_src in posters[0].attrib else posters[0].attrib['src'])
+                image_url = unpack_url(movie_poster)
+            else:
+                image_url = 'icon_ios.png'
             titles = movie.xpath('article/div/div/h2/a')
             if len(titles) < 1:
                 continue
@@ -186,7 +188,7 @@ def fetch_kino(events, from_time, to_time, uri):
             template = {
                 'name': movie_name,
                 'place': theater_name,
-                'image_url': unpack_url(movie_poster),
+                'image_url': image_url,
                 'url': unpack_url(movie_url),
                 'source': '#kino',
             }

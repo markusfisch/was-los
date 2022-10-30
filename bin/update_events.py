@@ -178,7 +178,7 @@ def fetch_kino(events, from_time, to_time, uri):
                 continue
             movie_poster = (posters[0].attrib[data_src] if
                 data_src in posters[0].attrib else posters[0].attrib['src'])
-            titles = movie.xpath('article/div/h2/a')
+            titles = movie.xpath('article/div/div/h2/a')
             if len(titles) < 1:
                 continue
             movie_url = titles[0].attrib['href']

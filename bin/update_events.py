@@ -87,7 +87,10 @@ def fetch_vk_nuernberg(events, from_time, to_time, uri):
         elif t == 1:
             step = info['TAEGLICHXTEN']
             tt = info['TAEGLICHTYP']
-            end = datetime.strptime(info['ZEITRAUMENDE'], '%Y-%m-%d')
+            end = info['ZEITRAUMENDE']
+            if len(end) == 8:
+                end = '20' + end
+            end = datetime.strptime(end, '%Y-%m-%d')
             for day_time in dates[0]:
                 parts = re.split(r'[A-Z]', day_time)
                 day = datetime.strptime(parts[0], '%Y-%m-%d')

@@ -11,15 +11,11 @@ from datetime import datetime, timedelta
 from lxml import etree, html as lxmlhtml
 
 
-def parse_date(s, format = '%Y-%m-%d'):
+def parse_date(s):
     try:
-        return datetime.strptime(s, format)
+        return datetime.fromisoformat(s)
     except:
         return datetime.today()
-
-
-def parse_date_time(s):
-    return parse_date(s, '%Y-%m-%d %H:%M')
 
 
 def essence(s):
@@ -50,7 +46,7 @@ def ensure_https(url):
 
 def add_event(events, from_time, to_time, template, day, begin):
     begin = day + ' ' + (begin if begin != "" else '00:00')
-    begin_date = parse_date_time(begin)
+    begin_date = parse_date(begin)
     if begin_date < from_time or begin_date > to_time:
         return
     template['name'] = html.unescape(template['name'])
@@ -156,7 +152,7 @@ def fetch_cinecitta(events, from_time, to_time, uri):
                 )
                 template['place'] = place
                 for showing in screen['vorstellungen']:
-                    dt = datetime.fromisoformat(showing['datum_uhrzeit_iso'])
+                    dt = parse_date(showing['datum_uhrzeit_iso'])
                     add_event(
                         events,
                         from_time,
@@ -311,7 +307,7 @@ onclick="clearQuery()">x</a></div></div>
     mark_index = 0
     mark = time_marks_keys[mark_index]
     for event in events:
-        dt = parse_date_time(event['begin'])
+        dt = parse_date(event['begin'])
         if dt.hour >= mark:
             anchor_tag = 'name="%d" ' % (dt.hour, )
             mark_index += 1
@@ -362,7 +358,7 @@ def generate_files(events, today):
         )
         chunk = []
         for event in events:
-            dt = parse_date_time(event['begin'])
+            dt = parse_date(event['begin'])
             if dt < from_time:
                 continue
             if dt > to_time:

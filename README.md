@@ -31,7 +31,7 @@ The following packages need to be installed to generate the static HTML pages:
 There's a Python script that's supposed to run around midnight that will
 generate a couple of static HTML pages:
 
-	$ ./bin/update_events.py htdocs res/screen.css
+	$ ./src/update_events.py htdocs res/screen.css
 
 The first argument (`htdocs`) is the output directory.
 

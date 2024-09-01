@@ -185,8 +185,8 @@ def fetch_kino(events, from_time, to_time, uri):
         ):
             posters = movie.xpath('article/div/div/img')
             if len(posters) > 0:
-                movie_poster = (posters[0].attrib[data_src] if
-                    data_src in posters[0].attrib else posters[0].attrib['src'])
+                movie_poster = (posters[0].attrib[data_src] if data_src in
+                    posters[0].attrib else posters[0].attrib['src'])
                 image_url = unpack_url(movie_poster)
             else:
                 image_url = 'icon_ios.png'

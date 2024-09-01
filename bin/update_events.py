@@ -11,6 +11,17 @@ from datetime import datetime, timedelta
 from lxml import etree, html as lxmlhtml
 
 
+def parse_date(s, format = '%Y-%m-%d'):
+    try:
+        return datetime.strptime(s, format)
+    except:
+        return datetime.today()
+
+
+def parse_date_time(s):
+    return parse_date(s, '%Y-%m-%d %H:%M')
+
+
 def essence(s):
     # remove all non-alphabetical characters
     e = ''
@@ -39,7 +50,7 @@ def ensure_https(url):
 
 def add_event(events, from_time, to_time, template, day, begin):
     begin = day + ' ' + (begin if begin != "" else '00:00')
-    begin_date = datetime.strptime(begin, '%Y-%m-%d %H:%M')
+    begin_date = parse_date_time(begin)
     if begin_date < from_time or begin_date > to_time:
         return
     template['name'] = html.unescape(template['name'])
@@ -90,10 +101,10 @@ def fetch_vk_nuernberg(events, from_time, to_time, uri):
             end = info['ZEITRAUMENDE']
             if len(end) == 8:
                 end = '20' + end
-            end = datetime.strptime(end, '%Y-%m-%d')
+            end = parse_date(end)
             for day_time in dates[0]:
                 parts = re.split(r'[A-Z]', day_time)
-                day = datetime.strptime(parts[0], '%Y-%m-%d')
+                day = parse_date(parts[0])
                 while day < end:
                     if tt == 1 or day.weekday() < 5:
                         add_vk_nuernberg_event(
@@ -112,10 +123,10 @@ def fetch_vk_nuernberg(events, from_time, to_time, uri):
                 6: 'WOSO',
             }
             step = info['WOCHEXTE'] * 7
-            end = datetime.strptime(info['ZEITRAUMENDE'], '%Y-%m-%d')
+            end = parse_date(info['ZEITRAUMENDE'])
             for day_time in dates[0]:
                 parts = re.split(r'[A-Z]', day_time)
-                day = datetime.strptime(parts[0], '%Y-%m-%d')
+                day = parse_date(parts[0])
                 while day < end:
                     offset = day
                     for i in range(7):
@@ -300,7 +311,7 @@ onclick="clearQuery()">x</a></div></div>
     mark_index = 0
     mark = time_marks_keys[mark_index]
     for event in events:
-        dt = datetime.strptime(event['begin'], '%Y-%m-%d %H:%M')
+        dt = parse_date_time(event['begin'])
         if dt.hour >= mark:
             anchor_tag = 'name="%d" ' % (dt.hour, )
             mark_index += 1
@@ -351,7 +362,7 @@ def generate_files(events, today):
         )
         chunk = []
         for event in events:
-            dt = datetime.strptime(event['begin'], '%Y-%m-%d %H:%M')
+            dt = parse_date_time(event['begin'])
             if dt < from_time:
                 continue
             if dt > to_time:

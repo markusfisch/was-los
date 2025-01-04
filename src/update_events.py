@@ -8,7 +8,6 @@ import sys
 import traceback
 
 from datetime import datetime, timedelta
-from lxml import etree, html as lxmlhtml
 
 
 def parse_date(s):
@@ -227,40 +226,6 @@ def fetch_kino(events, from_time, to_time, city_id):
             )
 
 
-def fetch_sommernachtfilmfestival(events, from_time, to_time, uri):
-    host = uri.split('/filme')[0]
-    tree = lxmlhtml.fromstring(requests.get(uri).content)
-    listing = tree.xpath('//div[@class="product-grid image-card-collection image-card-collection--grid"]')
-    if len(listing) < 1:
-        return
-    for movie in listing[0]:
-        posters = movie.xpath('figure/img[@class="product-grid__image"]')
-        if len(posters) < 1:
-            continue
-        names = movie.xpath('div/h3')
-        if len(names) < 1:
-            continue
-        template = {
-            'name': names[0].text,
-            'image_url': host + posters[0].attrib['src'],
-            'url': host + movie.attrib['href'],
-            'source': '#sommernachtfilmfestival',
-        }
-        dates = movie.xpath('div/p/span')
-        if len(dates) < 1:
-            continue
-        dt = datetime.strptime(dates[0].text.strip(), '%d.%m.%Y')
-        template['place'] = 'Sommernachtsfilmfestival'
-        add_event(
-            events,
-            from_time,
-            to_time,
-            template,
-            dt.strftime('%Y-%m-%d'),
-            '21:00'
-        )
-
-
 def fetch_events(from_time, to_time):
     # use a dict to be able to merge events
     events = {}
@@ -272,8 +237,6 @@ def fetch_events(from_time, to_time):
         (fetch_kino, '7903'),
         (fetch_kino, '3195'),
         (fetch_kino, '2731'),
-        (fetch_sommernachtfilmfestival,
-                'https://www.sommernachtfilmfestival.de/filme/'),
     ]:
         count = len(events)
         # try all sources separately to allow failures

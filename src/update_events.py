@@ -183,7 +183,7 @@ def fetch_kino(events, from_time, to_time, uri):
         for movie in theater.xpath(
             'div[@class="cinema-movies-container"]/ul/li'
         ):
-            posters = movie.xpath('article/div/div/img')
+            posters = movie.xpath('article/img')
             if len(posters) > 0:
                 movie_poster = (posters[0].attrib[data_src] if data_src in
                     posters[0].attrib else posters[0].attrib['src'])

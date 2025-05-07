@@ -190,7 +190,7 @@ def fetch_kino(events, from_time, to_time, uri):
                 image_url = unpack_url(movie_poster)
             else:
                 image_url = 'icon_ios.png'
-            titles = movie.xpath('article/div/h2/a')
+            titles = movie.xpath('article/div/div/a')
             if len(titles) < 1:
                 continue
             movie_url = titles[0].attrib['href']

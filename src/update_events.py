@@ -8,14 +8,20 @@ import sys
 import traceback
 
 from datetime import datetime, timedelta
-from lxml import etree, html as lxmlhtml
 
 
 def parse_date(s):
+    if s is None or s == '':
+        return None
     try:
-        return datetime.fromisoformat(s)
+        if s.endswith('Z'):
+            utc = datetime.fromisoformat(s.replace("Z", "+00:00"))
+            return utc + timedelta(hours=2)
+        else:
+            return datetime.fromisoformat(s)
     except:
-        return datetime.today()
+        print("cannot parse date: %s" % (s, ))
+        return None
 
 
 def essence(s):
@@ -47,7 +53,7 @@ def ensure_https(url):
 def add_event(events, from_time, to_time, template, day, begin):
     begin = day + ' ' + (begin if begin != "" else '00:00')
     begin_date = parse_date(begin)
-    if begin_date < from_time or begin_date > to_time:
+    if begin_date is None or begin_date < from_time or begin_date > to_time:
         return
     template['name'] = html.unescape(template['name'])
     template['place'] = html.unescape(template['place'])
@@ -98,9 +104,13 @@ def fetch_vk_nuernberg(events, from_time, to_time, uri):
             if len(end) == 8:
                 end = '20' + end
             end = parse_date(end)
+            if end is None:
+                continue
             for day_time in dates[0]:
                 parts = re.split(r'[A-Z]', day_time)
                 day = parse_date(parts[0])
+                if day is None:
+                    continue
                 while day < end:
                     if tt == 1 or day.weekday() < 5:
                         add_vk_nuernberg_event(
@@ -120,9 +130,13 @@ def fetch_vk_nuernberg(events, from_time, to_time, uri):
             }
             step = info['WOCHEXTE'] * 7
             end = parse_date(info['ZEITRAUMENDE'])
+            if end is None:
+                continue
             for day_time in dates[0]:
                 parts = re.split(r'[A-Z]', day_time)
                 day = parse_date(parts[0])
+                if day is None:
+                    continue
                 while day < end:
                     offset = day
                     for i in range(7):
@@ -153,6 +167,8 @@ def fetch_cinecitta(events, from_time, to_time, uri):
                 template['place'] = place
                 for showing in screen['vorstellungen']:
                     dt = parse_date(showing['datum_uhrzeit_iso'])
+                    if dt is None:
+                        continue
                     add_event(
                         events,
                         from_time,
@@ -163,60 +179,44 @@ def fetch_cinecitta(events, from_time, to_time, uri):
                     )
 
 
-def fetch_kino(events, from_time, to_time, uri):
-    def unpack_url(url):
-        if url.startswith('//'):
-            url = url[2:]
-        if url.startswith('http://'):
-            return url
-        if url.startswith('https://'):
-            return url
-        return 'https://' + url
-
-    data_src = 'data-src'
-    tree = lxmlhtml.fromstring(requests.get(uri).content)
-    for theater in tree.xpath('//li[@class="cinemaprogram-cinema"]'):
-        names = theater.xpath('div[@class="cinemaprogram-meta"]/div/h2')
-        if len(names) < 1:
+def fetch_kino(events, from_time, to_time, city_id):
+    api_base = 'https://kntkapi.apps.stroeermb.de/api/'
+    root = requests.get(api_base + 'city/' + city_id + '/').json()
+    for cinema in root['cinemas']:
+        cinema_id = cinema['id']
+        if cinema_id is None:
             continue
-        theater_name = names[0].text
-        for movie in theater.xpath(
-            'div[@class="cinema-movies-container"]/ul/li'
-        ):
-            posters = movie.xpath('article/div/img')
-            if len(posters) > 0:
-                movie_poster = (posters[0].attrib[data_src] if data_src in
-                    posters[0].attrib else posters[0].attrib['src'])
-                image_url = unpack_url(movie_poster)
-            else:
-                image_url = 'icon_ios.png'
-            titles = movie.xpath('article/div/div/a')
-            if len(titles) < 1:
+        cinema = requests.get(api_base + 'cinema/' + cinema_id + '/').json()
+        cinema_name = cinema['name']
+        movies = {}
+        for movie in cinema['movies']:
+            movies[movie['id']] = {
+                'name': movie['title'],
+                'image_url': movie['media']['poster_url'],
+            }
+        for showtime in cinema['showtimes']:
+            movie_id = showtime['movie']['id']
+            movie = movies.get(movie_id)
+            if movie is None:
                 continue
-            movie_url = titles[0].attrib['href']
-            movie_name = titles[0].text
             template = {
-                'name': movie_name,
-                'place': theater_name,
-                'image_url': image_url,
-                'url': unpack_url(movie_url),
+                'name': movie['name'],
+                'image_url': movie['image_url'],
+                'place': cinema_name,
+                'url': showtime['ticket_purchase_url'],
                 'source': '#kino',
             }
-            showings = movie.xpath('ol/li/a/time')
-            if len(showings) < 1:
+            dt = parse_date(showtime['showtime'])
+            if dt is None:
                 continue
-            for showing in showings:
-                datetime = showing.attrib['datetime'].split(' ')
-                if len(datetime) < 2:
-                    continue
-                add_event(
-                    events,
-                    from_time,
-                    to_time,
-                    template,
-                    datetime[0],
-                    datetime[1],
-                )
+            add_event(
+                events,
+                from_time,
+                to_time,
+                template,
+                dt.strftime('%Y-%m-%d'),
+                dt.strftime('%H:%M'),
+            )
 
 
 def fetch_events(from_time, to_time):
@@ -227,9 +227,9 @@ def fetch_events(from_time, to_time):
         (fetch_cinecitta, 'https://www.cinecitta.de/common/ajax.php?' +
                 'bereich=portal&modul_id=101&klasse=vorstellungen&' +
                 'cli_mode=1&com=anzeigen_spielplan'),
-        (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/nuernberg/'),
-        (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/fuerth/'),
-        (fetch_kino, 'https://www.kino.de/kinoprogramm/stadt/erlangen/'),
+        (fetch_kino, '7903'),
+        (fetch_kino, '3195'),
+        (fetch_kino, '2731'),
     ]:
         count = len(events)
         # try all sources separately to allow failures
@@ -308,6 +308,8 @@ onclick="clearQuery()">x</a></div></div>
     mark = time_marks_keys[mark_index]
     for event in events:
         dt = parse_date(event['begin'])
+        if dt is None:
+            continue
         if dt.hour >= mark:
             anchor_tag = 'name="%d" ' % (dt.hour, )
             mark_index += 1
@@ -359,7 +361,7 @@ def generate_files(events, today):
         chunk = []
         for event in events:
             dt = parse_date(event['begin'])
-            if dt < from_time:
+            if dt is None or dt < from_time:
                 continue
             if dt > to_time:
                 break

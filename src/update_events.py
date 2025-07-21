@@ -73,6 +73,7 @@ def add_event(events, from_time, to_time, template, day, begin):
 
 def fetch_vk_nuernberg(events, from_time, to_time, uri):
     url_template = 'https://www.nuernberg.de/internet/stadtportal/nbg_veranstaltungen.html?r=8&miniweb=stadtportal&vid=%s_%sT%s#vk_detail#'
+    max_date = datetime.today() + timedelta(days=7)
 
     def add_vk_nuernberg_event(date, time):
         template['url'] = url_template % (vid, date, time, )
@@ -106,6 +107,7 @@ def fetch_vk_nuernberg(events, from_time, to_time, uri):
             end = parse_date(end)
             if end is None:
                 continue
+            end = min(max_date, end)
             for day_time in dates[0]:
                 parts = re.split(r'[A-Z]', day_time)
                 day = parse_date(parts[0])
@@ -132,6 +134,7 @@ def fetch_vk_nuernberg(events, from_time, to_time, uri):
             end = parse_date(info['ZEITRAUMENDE'])
             if end is None:
                 continue
+            end = min(max_date, end)
             for day_time in dates[0]:
                 parts = re.split(r'[A-Z]', day_time)
                 day = parse_date(parts[0])

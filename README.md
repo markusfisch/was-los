@@ -54,5 +54,6 @@ Currently aggregates events and movie screenings from:
 * [Kino.de](https://www.kino.de/)
 * [Cinecitta Nürnberg](https://www.cinecitta.de/)
 * [Autokinosommer](https://autokinosommer.de/)
+* [Sommernachtfilmfestival](https://www.sommernachtfilmfestival.de/)
 
 All content is property of those sources.

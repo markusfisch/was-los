@@ -185,11 +185,15 @@ def fetch_cinecitta(events, from_time, to_time, uri):
 
 def fetch_kino(events, from_time, to_time, city_id):
     api_base = 'https://kntkapi.apps.stroeermb.de/api/'
+
     root = requests.get(api_base + 'city/' + city_id + '/').json()
-    for cinema in root['cinemas']:
-        cinema_id = cinema['id']
-        if cinema_id is None:
-            continue
+    cinema_ids = set()
+    for cinemas in root['cinemas_by_movie']:
+        for cinema in cinemas['cinemas']:
+            cinema_ids.add(cinema['id'])
+    unique_cinema_ids = sorted(list(cinema_ids))
+
+    for cinema_id in unique_cinema_ids:
         cinema = requests.get(api_base + 'cinema/' + cinema_id + '/').json()
         cinema_name = cinema['name']
         movies = {}

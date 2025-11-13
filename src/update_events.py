@@ -8,6 +8,7 @@ import sys
 import traceback
 
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 
 def parse_date(s):
@@ -16,7 +17,7 @@ def parse_date(s):
     try:
         if s.endswith('Z'):
             utc = datetime.fromisoformat(s.replace("Z", "+00:00"))
-            return utc + timedelta(hours=2)
+            return utc.astimezone(ZoneInfo("Europe/Berlin"))
         else:
             return datetime.fromisoformat(s)
     except:

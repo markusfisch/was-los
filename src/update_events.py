@@ -9,6 +9,8 @@ import traceback
 
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+from lxml import html as lxml_html
+from urllib.parse import urljoin
 
 
 def parse_date(s):
@@ -154,33 +156,165 @@ def fetch_vk_nuernberg(events, from_time, to_time, uri):
 
 
 def fetch_cinecitta(events, from_time, to_time, uri):
-    shows = requests.get(uri).json()
-    for item in shows['daten']['items']:
-        template = {
-            'name': item['film_titel'],
-            'image_url': item['film_cover_src'],
-            'url': 'https://www.cinecitta.de/' + item['filminfo_href'],
+    base_url = 'https://www.cinecitta.de'
+    session = requests.Session()
+    response = session.get(uri, timeout=30)
+    response.raise_for_status()
+    document = lxml_html.fromstring(response.text)
+
+    def build_weekday_lookup():
+        lookup = {}
+        for node in document.xpath("//input[@name='tx_filmapi_list[weekdays][]']"):
+            iso_value = node.get('value')
+            dt = parse_date(iso_value)
+            if dt is None:
+                continue
+            lookup[dt.strftime('%d.%m')] = dt
+        return lookup
+
+    weekday_lookup = build_weekday_lookup()
+
+    def infer_date(day_key, fallback):
+        day, month = map(int, day_key.split('.'))
+        year = fallback.year
+        candidate = datetime(year, month, day)
+        if candidate < fallback - timedelta(days=180):
+            candidate = datetime(year + 1, month, day)
+        elif candidate - fallback > timedelta(days=200):
+            candidate = datetime(year - 1, month, day)
+        return candidate
+
+    def resolve_header_dates(table):
+        dates = []
+        previous = None
+        headers = table.xpath(".//thead//th[position()>1]")
+        for header in headers:
+            text = ''.join(header.itertext())
+            match = re.search(r'(\d{2}\.\d{2})', text)
+            if not match:
+                dates.append(None)
+                continue
+            key = match.group(1)
+            dt = weekday_lookup.get(key)
+            if dt is None:
+                dt = previous + timedelta(days=1) if previous else infer_date(
+                    key,
+                    from_time,
+                )
+            if previous is not None:
+                while dt < previous:
+                    dt = datetime(dt.year + 1, dt.month, dt.day)
+            dates.append(dt)
+            previous = dt
+        return dates
+
+    def parse_fragment(html_fragment):
+        wrapper = lxml_html.fromstring('<ul>%s</ul>' % html_fragment)
+        return wrapper.xpath(".//li[contains(@class,'filmapi-container__list--li')]")
+
+    def fetch_additional_film_nodes():
+        form = document.xpath("//form[@id='loadMoreFilms']")
+        if not form:
+            return []
+        form = form[0]
+        action = urljoin(base_url, form.get('action'))
+        data = {}
+        for field in form.xpath(".//input[@name]"):
+            name = field.get('name')
+            data[name] = field.get('value') or ''
+        limit = int(data.get('tx_filmapi_list[limit]', '0') or 0)
+        total = int(data.get('tx_filmapi_list[allFilmss]', '0') or 0)
+        offset = int(data.get('tx_filmapi_list[offset]', '0') or 0)
+        if limit <= 0 or total <= offset:
+            return []
+        nodes = []
+        headers = {'X-Requested-With': 'XMLHttpRequest'}
+        while offset < total:
+            payload = data.copy()
+            payload['tx_filmapi_list[offset]'] = str(offset)
+            try:
+                more = session.post(action, data=payload, headers=headers, timeout=30)
+                more.raise_for_status()
+                content = more.json().get('content', '')
+            except Exception as exc:
+                print('cinecitta loadMore failed: %s' % (exc, ))
+                break
+            if not content.strip():
+                break
+            nodes.extend(parse_fragment(content))
+            offset += limit
+        return nodes
+
+    def absolute_url(path):
+        if not path:
+            return ''
+        return ensure_https(urljoin(base_url, path))
+
+    film_nodes = document.xpath("//li[contains(@class,'filmapi-container__list--li')]")
+    film_nodes.extend(fetch_additional_film_nodes())
+
+    for film in film_nodes:
+        name = ''.join(
+            film.xpath(".//div[contains(@class,'filmapi-container__list--header')]//h3/text()")
+        ).strip()
+        if not name:
+            continue
+        url_node = film.xpath(".//a[contains(@href, '/filme/')][1]/@href")
+        image_node = film.xpath(".//div[contains(@class,'w-poster')]//img/@src")
+        base_template = {
+            'name': name,
+            'image_url': absolute_url(image_node[0]) if image_node else '',
+            'url': absolute_url(url_node[0]) if url_node else uri,
             'source': '#cinecitta',
         }
-        for theater in item['theater']:
-            for screen in theater['leinwaende']:
-                place = '%s %s' % (
-                    screen['theater_name'],
-                    screen['leinwand_name'],
-                )
-                template['place'] = place
-                for showing in screen['vorstellungen']:
-                    dt = parse_date(showing['datum_uhrzeit_iso'])
-                    if dt is None:
+        showtime_sections = film.xpath(".//div[contains(@class,'show_playing_times__content')]")
+        if not showtime_sections:
+            continue
+        for center_header in showtime_sections[0].xpath(".//div[@data-index]"):
+            center_name = ''.join(
+                center_header.xpath(".//span[contains(@class,'font-semibold')]/text()")
+            ).strip()
+            if not center_name:
+                center_name = ''.join(center_header.xpath(".//span/text()")).strip()
+            sibling = center_header.getnext()
+            while sibling is not None and not isinstance(getattr(sibling, 'tag', None), str):
+                sibling = sibling.getnext()
+            if sibling is None:
+                continue
+            tables = sibling.xpath(".//table")
+            if not tables:
+                continue
+            table = tables[0]
+            header_dates = resolve_header_dates(table)
+            rows = table.xpath(".//tbody/tr")
+            for row in rows:
+                screen_name = ''.join(
+                    row.xpath(".//th//div[contains(@class,'font-semibold')]/text()")
+                ).strip()
+                if not screen_name:
+                    continue
+                place = '%s %s' % (center_name, screen_name)
+                cells = row.xpath('.//td')
+                for cell, day_dt in zip(cells, header_dates):
+                    if day_dt is None:
                         continue
-                    add_event(
-                        events,
-                        from_time,
-                        to_time,
-                        template,
-                        dt.strftime('%Y-%m-%d'),
-                        dt.strftime('%H:%M'),
-                    )
+                    day = day_dt.strftime('%Y-%m-%d')
+                    for link in cell.xpath(".//a[contains(@class,'performance-link')]"):
+                        time_text = ''.join(
+                            link.xpath(".//span[contains(@class,'link-text')]/text()")
+                        ).strip()
+                        if not time_text:
+                            continue
+                        template = base_template.copy()
+                        template['place'] = place
+                        add_event(
+                            events,
+                            from_time,
+                            to_time,
+                            template,
+                            day,
+                            time_text,
+                        )
 
 
 def fetch_kino(events, from_time, to_time, city_id):
@@ -232,9 +366,7 @@ def fetch_events(from_time, to_time):
     events = {}
     for source in [
         (fetch_vk_nuernberg, 'https://vk.nuernberg.de/export.php'),
-        (fetch_cinecitta, 'https://www.cinecitta.de/common/ajax.php?' +
-                'bereich=portal&modul_id=101&klasse=vorstellungen&' +
-                'cli_mode=1&com=anzeigen_spielplan'),
+        (fetch_cinecitta, 'https://www.cinecitta.de/programm/'),
         (fetch_kino, '7903'),
         (fetch_kino, '3195'),
         (fetch_kino, '2731'),

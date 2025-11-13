@@ -2,13 +2,13 @@
 
 import html
 import json
+import pytz
 import re
 import requests
 import sys
 import traceback
 
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
 from lxml import html as lxml_html
 from urllib.parse import urljoin
 
@@ -19,7 +19,7 @@ def parse_date(s):
     try:
         if s.endswith('Z'):
             utc = datetime.fromisoformat(s.replace("Z", "+00:00"))
-            return utc.astimezone(ZoneInfo("Europe/Berlin"))
+            return utc.astimezone(pytz.timezone("Europe/Berlin"))
         else:
             return datetime.fromisoformat(s)
     except:

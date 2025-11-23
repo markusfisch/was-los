@@ -155,10 +155,9 @@ def fetch_vk_nuernberg(events, from_time, to_time, uri):
                     day += timedelta(days=step)
 
 
-def fetch_cinecitta(events, from_time, to_time, uri):
-    base_url = 'https://www.cinecitta.de'
+def fetch_cinecitta(events, from_time, to_time, base_url):
     session = requests.Session()
-    response = session.get(uri, timeout=30)
+    response = session.get(base_url + '/programm/', timeout=30)
     response.raise_for_status()
     document = lxml_html.fromstring(response.text)
 
@@ -264,7 +263,7 @@ def fetch_cinecitta(events, from_time, to_time, uri):
         base_template = {
             'name': name,
             'image_url': absolute_url(image_node[0]) if image_node else '',
-            'url': absolute_url(url_node[0]) if url_node else uri,
+            'url': absolute_url(url_node[0]) if url_node else base_url,
             'source': '#cinecitta',
         }
         showtime_sections = film.xpath(".//div[contains(@class,'show_playing_times__content')]")
@@ -366,7 +365,7 @@ def fetch_events(from_time, to_time):
     events = {}
     for source in [
         (fetch_vk_nuernberg, 'https://vk.nuernberg.de/export.php'),
-        (fetch_cinecitta, 'https://www.cinecitta.de/programm/'),
+        (fetch_cinecitta, 'https://www.cinecitta.de'),
         (fetch_kino, '7903'),
         (fetch_kino, '3195'),
         (fetch_kino, '2731'),

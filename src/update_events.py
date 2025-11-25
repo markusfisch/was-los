@@ -50,7 +50,7 @@ def same(places, place):
 
 
 def ensure_https(url):
-    return url.replace('http://', 'https://')
+    return "" if url is None else url.replace('http://', 'https://')
 
 
 def add_event(events, from_time, to_time, template, day, begin):

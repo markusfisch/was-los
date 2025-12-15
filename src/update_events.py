@@ -53,6 +53,10 @@ def ensure_https(url):
     return "" if url is None else url.replace('http://', 'https://')
 
 
+def is_cinecitta_image(url):
+    return isinstance(url, str) and 'cinecitta.de' in url
+
+
 def add_event(events, from_time, to_time, template, day, begin):
     begin = day + ' ' + (begin if begin != "" else '00:00')
     begin_date = parse_date(begin)
@@ -72,6 +76,14 @@ def add_event(events, from_time, to_time, template, day, begin):
             event['source'] += ' ' + template['source']
         if not same(event['place'], template['place']):
             event['place'] += ', ' + template['place']
+        # Prefer a poster from non-cinecitta sources because cinecitta
+        # periodically re-hashes image filenames which breaks older links.
+        if template.get('image_url'):
+            if not event.get('image_url') or (
+                is_cinecitta_image(event.get('image_url')) and
+                not is_cinecitta_image(template['image_url'])
+            ):
+                event['image_url'] = template['image_url']
 
 
 def fetch_vk_nuernberg(events, from_time, to_time, uri):

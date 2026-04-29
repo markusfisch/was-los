@@ -19,7 +19,8 @@ function filter(table, term) {
 		}
 		return visible
 	}
-	const values = term.trim().toLowerCase().split(' ').filter(v => v != '')
+	const trimmed = term.trim()
+	const values = trimmed.toLowerCase().split(' ').filter(v => v != '')
 	for (const row of table.rows) {
 		row.style.display = indexOf(
 			row.cells[1].innerText.toLowerCase(),
@@ -28,7 +29,7 @@ function filter(table, term) {
 	}
 	dayTimes.style.display = values.length > 0 ? 'none' : 'flex'
 	for (let a of dayLinks) {
-		a.href = a.originalHref + '?' + encodeURI(term)
+		a.href = a.originalHref + '?' + encodeURI(trimmed)
 	}
 }
 

@@ -372,12 +372,80 @@ def fetch_kino(events, from_time, to_time, city_id):
             )
 
 
+def fetch_admiral(events, from_time, to_time, cinema_id):
+    query = '''
+    query Program($cinemaIds: [ID!]!, $dates: [Date!]) {
+      programByMovie(
+        cinemaIds: $cinemaIds
+        dates: $dates
+        isCinemaSpecific: true
+        first: 100
+      ) {
+        data {
+          movie { title urlSlug thumbnailImage { url } }
+          showGroups {
+            shows {
+              data { beginning deeplink }
+            }
+          }
+        }
+      }
+    }
+    '''
+    dates = []
+    day = from_time
+    while day.date() <= to_time.date():
+        dates.append(day.strftime('%Y-%m-%d'))
+        day += timedelta(days=1)
+    response = requests.post(
+        'https://next-live.kinoheld.de/graphql',
+        json={
+            'query': query,
+            'variables': {
+                'cinemaIds': [cinema_id],
+                'dates': dates,
+            },
+        },
+        timeout=30,
+    )
+    response.raise_for_status()
+    result = response.json()
+    if result.get('errors'):
+        raise RuntimeError(result['errors'])
+
+    for item in result['data']['programByMovie']['data']:
+        movie = item['movie']
+        image = movie.get('thumbnailImage')
+        for group in item['showGroups']:
+            for showtime in group['shows']['data']:
+                dt = parse_date(showtime['beginning'])
+                if dt is None:
+                    continue
+                template = {
+                    'name': movie['title'],
+                    'image_url': image['url'] if image else '',
+                    'place': 'Admiral Nürnberg',
+                    'url': showtime.get('deeplink') or
+                           'https://www.kinoheld.de/film/' + movie['urlSlug'],
+                    'source': '#admiral',
+                }
+                add_event(
+                    events,
+                    from_time,
+                    to_time,
+                    template,
+                    dt.strftime('%Y-%m-%d'),
+                    dt.strftime('%H:%M'),
+                )
+
+
 def fetch_events(from_time, to_time):
     # use a dict to be able to merge events
     events = {}
     for source in [
         (fetch_vk_nuernberg, 'https://vk.nuernberg.de/export.php'),
         (fetch_cinecitta, 'https://www.cinecitta.de'),
+        (fetch_admiral, '267'),
         (fetch_kino, '7903'),
         (fetch_kino, '3195'),
         (fetch_kino, '2731'),

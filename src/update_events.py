@@ -67,6 +67,7 @@ def add_event(events, from_time, to_time, template, day, begin):
     template['begin'] = begin
     template['image_url'] = ensure_https(template['image_url'])
     template['url'] = ensure_https(template['url'])
+    template['info_url'] = ensure_https(template.get('info_url'))
     key = begin + essence(template['name'])
     event = events.get(key)
     if event is None:
@@ -84,6 +85,8 @@ def add_event(events, from_time, to_time, template, day, begin):
                 not is_cinecitta_image(template['image_url'])
             ):
                 event['image_url'] = template['image_url']
+        if not event.get('info_url') and template['info_url']:
+            event['info_url'] = template['info_url']
 
 
 def fetch_vk_nuernberg(events, from_time, to_time, uri):
@@ -92,6 +95,7 @@ def fetch_vk_nuernberg(events, from_time, to_time, uri):
 
     def add_vk_nuernberg_event(date, time):
         template['url'] = url_template % (vid, date, time, )
+        template['info_url'] = template['url']
         add_event(events, from_time, to_time, template, date, time)
 
     evs = requests.get(uri).json()
@@ -275,7 +279,7 @@ def fetch_cinecitta(events, from_time, to_time, base_url):
         base_template = {
             'name': name,
             'image_url': absolute_url(image_node[0]) if image_node else '',
-            'url': absolute_url(url_node[0]) if url_node else base_url,
+            'info_url': absolute_url(url_node[0]) if url_node else '',
             'source': '#cinecitta',
         }
         showtime_sections = film.xpath(".//div[contains(@class,'show_playing_times__content')]")
@@ -318,6 +322,8 @@ def fetch_cinecitta(events, from_time, to_time, base_url):
                             continue
                         template = base_template.copy()
                         template['place'] = place
+                        template['url'] = link.get('href') or \
+                            template['info_url'] or base_url
                         add_event(
                             events,
                             from_time,
@@ -416,6 +422,7 @@ def fetch_admiral(events, from_time, to_time, cinema_id):
     for item in result['data']['programByMovie']['data']:
         movie = item['movie']
         image = movie.get('thumbnailImage')
+        info_url = 'https://www.kinoheld.de/film/' + movie['urlSlug']
         for group in item['showGroups']:
             for showtime in group['shows']['data']:
                 dt = parse_date(showtime['beginning'])
@@ -425,8 +432,8 @@ def fetch_admiral(events, from_time, to_time, cinema_id):
                     'name': movie['title'],
                     'image_url': image['url'] if image else '',
                     'place': 'Admiral Nürnberg',
-                    'url': showtime.get('deeplink') or
-                           'https://www.kinoheld.de/film/' + movie['urlSlug'],
+                    'url': showtime.get('deeplink') or info_url,
+                    'info_url': info_url,
                     'source': '#admiral',
                 }
                 add_event(
@@ -539,13 +546,14 @@ onclick="clearQuery()">x</a></div></div>
         source = event['source']
         place = event['place']
         name = event['name']
-        f.write('''<tr><td class="Image"><img
-src="%s" alt="%s" width="128" loading="lazy"/></td>
+        f.write('''<tr><td class="Image"><a href="%s"><img
+src="%s" alt="%s" width="128" loading="lazy"/></a></td>
 <td class="Details"><time datetime="%s" class="When">%s</time>
 <span class="Source">%s</span><br/>
 <a class="Name" %shref="%s">%s</a><br/>
 <address class="Place">%s</address></td></tr>
 ''' % (
+            html.escape(event['info_url'] or event['url']),
             event['image_url'],
             html.escape(event['name']),
             event['begin'],
